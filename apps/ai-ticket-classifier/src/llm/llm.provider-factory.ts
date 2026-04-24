@@ -1,18 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GLMProvider } from './glm.provider';
 import { LLMBaseProvider } from './llm.base-provider';
-import { LLM_PROVIDER_NAME } from './llm.tokens';
 
 export type LLMProviderName = 'glm';
 
 @Injectable()
 export class LLMProviderFactory {
-  public constructor(
-    private readonly glmProvider: GLMProvider,
-    @Inject(LLM_PROVIDER_NAME) private readonly defaultProviderName: LLMProviderName,
-  ) {}
+  public constructor(private readonly glmProvider: GLMProvider) {}
 
-  public getProvider(name: LLMProviderName = this.defaultProviderName): LLMBaseProvider {
+  public getProvider(name: LLMProviderName): LLMBaseProvider {
     switch (name) {
       case 'glm':
         return this.glmProvider;

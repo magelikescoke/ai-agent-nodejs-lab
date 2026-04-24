@@ -97,7 +97,6 @@ cp apps/ai-ticket-classifier/.env.example apps/ai-ticket-classifier/.env
 | `PORT`           | `3000`                                                                         | API 服务端口                   |
 | `MONGODB_URI`    | `mongodb://root:example@localhost:27017/ai_ticket_classifier?authSource=admin` | MongoDB 连接地址               |
 | `REDIS_URL`      | `redis://localhost:6379`                                                       | Redis 连接地址                 |
-| `LLM_PROVIDER`   | `glm`                                                                          | LLM Provider 名称              |
 | `GLM_MODEL`      | `GLM-4.7-Flash`                                                                | GLM 默认模型                   |
 | `GLM_API_KEY`    | 空                                                                             | GLM API Key                    |
 | `GLM_BASE_URL`   | `https://open.bigmodel.cn/api/paas/v4`                                         | GLM OpenAI-compatible Base URL |

@@ -14,7 +14,7 @@ describe('LLMProviderFactory', () => {
 
   it('creates a GLM provider from GLM-specific config', () => {
     const glmProvider = new GLMProvider(config.glm);
-    const provider = new LLMProviderFactory(glmProvider, 'glm').getProvider();
+    const provider = new LLMProviderFactory(glmProvider).getProvider('glm');
 
     expect(provider).toBeInstanceOf(GLMProvider);
     expect(provider.getDefaultModelName()).toBe('glm-test');

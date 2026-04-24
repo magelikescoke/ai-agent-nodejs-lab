@@ -2,22 +2,15 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LlmConfiguration } from '../config/llm.config';
 import { GLMProvider, GlmProviderConfig } from './glm.provider';
-import { LLMProviderName } from './llm.provider-factory';
 import { LLMProviderFactory } from './llm.provider-factory';
-import { GLM_PROVIDER_CONFIG, LLM_PROVIDER_NAME } from './llm.tokens';
+import { GLM_PROVIDER_CONFIG } from './llm.tokens';
 
 @Module({
   providers: [
     {
       provide: GLM_PROVIDER_CONFIG,
       useFactory: (configService: ConfigService): GlmProviderConfig =>
-        configService.getOrThrow<LlmConfiguration>('llm').glm,
-      inject: [ConfigService],
-    },
-    {
-      provide: LLM_PROVIDER_NAME,
-      useFactory: (configService: ConfigService): LLMProviderName =>
-        configService.getOrThrow<LlmConfiguration>('llm').provider,
+        configService.getOrThrow<LlmConfiguration>('llm').providers.glm,
       inject: [ConfigService],
     },
     GLMProvider,

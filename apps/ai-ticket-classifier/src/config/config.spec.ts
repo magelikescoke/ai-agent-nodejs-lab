@@ -25,19 +25,19 @@ describe('configuration', () => {
   });
 
   it('loads llm settings from environment variables', () => {
-    process.env.LLM_PROVIDER = 'glm';
     process.env.GLM_MODEL = 'glm-test';
     process.env.GLM_API_KEY = 'test-key';
     process.env.GLM_BASE_URL = 'https://example.test/v1';
     process.env.GLM_TIMEOUT_MS = '5000';
 
     expect(llmConfig()).toEqual({
-      provider: 'glm',
-      glm: {
-        model: 'glm-test',
-        apiKey: 'test-key',
-        baseUrl: 'https://example.test/v1',
-        timeoutMs: 5000,
+      providers: {
+        glm: {
+          model: 'glm-test',
+          apiKey: 'test-key',
+          baseUrl: 'https://example.test/v1',
+          timeoutMs: 5000,
+        },
       },
     });
   });
