@@ -60,7 +60,7 @@ For this repository:
 After every successful `git commit`, use the `daily-progress-after-commit` skill:
 
 - Inspect the latest commit.
-- Compare the committed work with `../docs/ai-agent-nodejs-daily-todo-v2.md`.
+- Compare the committed work with `./docs/ai-agent-nodejs-daily-todo-v2.md`.
 - Update completed checklist items in that progress document when there is concrete evidence.
 - Do not mark partial work complete.
 - Mention the progress update result in the handoff.

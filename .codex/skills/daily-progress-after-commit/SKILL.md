@@ -1,6 +1,6 @@
 ---
 name: daily-progress-after-commit
-description: Use after creating a git commit in this repository to inspect the latest commit, compare it with ../docs/ai-agent-nodejs-daily-todo-v2.md, and update the daily TODO progress checklist.
+description: Use after creating a git commit in this repository to inspect the latest commit, compare it with ./docs/ai-agent-nodejs-daily-todo-v2.md, and update the daily TODO progress checklist.
 ---
 
 # Daily Progress After Commit
@@ -18,7 +18,7 @@ Use this skill immediately after every successful `git commit` in this repositor
 2. Open the progress document:
 
    ```text
-   ../docs/ai-agent-nodejs-daily-todo-v2.md
+   ./docs/ai-agent-nodejs-daily-todo-v2.md
    ```
 
 3. Match the commit contents to the relevant daily checklist items.
@@ -37,7 +37,7 @@ Use this skill immediately after every successful `git commit` in this repositor
 The expected file is:
 
 ```text
-../docs/ai-agent-nodejs-daily-todo-v2.md
+./docs/ai-agent-nodejs-daily-todo-v2.md
 ```
 
 If a user mentions `daily-to-v2.md`, check whether they mean the existing `daily-todo-v2.md` file before creating a new file.

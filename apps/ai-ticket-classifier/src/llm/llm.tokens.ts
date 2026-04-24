@@ -1,0 +1,2 @@
+export const GLM_PROVIDER_CONFIG = Symbol('GLM_PROVIDER_CONFIG');
+export const LLM_PROVIDER_NAME = Symbol('LLM_PROVIDER_NAME');
