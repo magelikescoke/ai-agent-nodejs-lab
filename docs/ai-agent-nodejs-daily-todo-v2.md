@@ -93,7 +93,7 @@
 ### Day 2：接入 LLM Provider
 
 - [x] 封装 `LlmModule`
-- [ ] 实现 `LlmService.generateText()`
+- [x] 实现 `LlmService.generateText()`
 - [x] 支持环境变量配置 model、apiKey、baseURL
 - [ ] 加入 timeout、基础错误处理
 - [ ] 写一个 `/health/llm` 测试接口

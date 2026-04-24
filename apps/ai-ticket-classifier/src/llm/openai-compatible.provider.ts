@@ -27,11 +27,16 @@ export abstract class OpenAiCompatibleProvider extends LLMBaseProvider {
 
   async generateText(prompt: string): Promise<string> {
     const client = this.getClient();
-    const res = await client.responses.create({
+    const res = await client.chat.completions.create({
       model: this.getDefaultModelName(),
-      input: prompt,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
     });
 
-    return res.output_text;
+    return res.choices[0]?.message.content ?? '';
   }
 }

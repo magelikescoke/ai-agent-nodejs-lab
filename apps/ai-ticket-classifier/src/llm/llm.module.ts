@@ -4,6 +4,8 @@ import { LlmConfiguration } from '../config/llm.config';
 import { GLMProvider, GlmProviderConfig } from './glm.provider';
 import { LLMProviderFactory } from './llm.provider-factory';
 import { GLM_PROVIDER_CONFIG } from './llm.tokens';
+import { LLMService } from './llm.service';
+import { LLMController } from './llm.controller';
 
 @Module({
   providers: [
@@ -15,7 +17,9 @@ import { GLM_PROVIDER_CONFIG } from './llm.tokens';
     },
     GLMProvider,
     LLMProviderFactory,
+    LLMService,
   ],
-  exports: [LLMProviderFactory],
+  controllers: [LLMController],
+  exports: [],
 })
 export class LlmModule {}
