@@ -54,3 +54,13 @@ For this repository:
 - Keep `apps/ai-ticket-classifier` as the NestJS service boundary.
 - Use Docker Compose only for local dependencies such as MongoDB and Redis.
 - Keep AI behavior replaceable: start with deterministic service logic, then isolate LLM or agent integrations behind services when they are added.
+
+## After Commit Progress Tracking
+
+After every successful `git commit`, use the `daily-progress-after-commit` skill:
+
+- Inspect the latest commit.
+- Compare the committed work with `../docs/ai-agent-nodejs-daily-todo-v2.md`.
+- Update completed checklist items in that progress document when there is concrete evidence.
+- Do not mark partial work complete.
+- Mention the progress update result in the handoff.
