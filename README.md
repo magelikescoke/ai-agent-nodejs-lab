@@ -1,1 +1,91 @@
 # ai-agent-nodejs-lab
+
+AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 Node.js/NestJS 项目。当前首个应用是 `ai-ticket-classifier`，用于演示工单分类服务的基本 API、测试和本地基础设施。
+
+## 项目目标
+
+- 搭建一个可扩展的 Node.js AI Agent 实验仓库。
+- 使用 NestJS 构建可测试、可维护的后端服务。
+- 为后续接入 LLM、队列、缓存、持久化和评估流程预留工程结构。
+- 通过 Docker Compose 提供 MongoDB 和 Redis 本地依赖。
+
+## 技术栈
+
+- Node.js + npm workspaces
+- NestJS
+- TypeScript
+- ESLint + Prettier
+- Jest
+- MongoDB
+- Redis
+- Docker Compose
+
+## 项目结构
+
+```text
+.
+├── apps/
+│   └── ai-ticket-classifier/
+│       ├── src/
+│       ├── jest.config.ts
+│       ├── package.json
+│       ├── tsconfig.app.json
+│       └── tsconfig.spec.json
+├── docker-compose.yml
+├── eslint.config.mjs
+├── nest-cli.json
+├── package.json
+└── tsconfig.json
+```
+
+## 运行方式
+
+安装依赖：
+
+```bash
+npm install
+```
+
+启动 MongoDB 和 Redis：
+
+```bash
+npm run docker:up
+```
+
+启动 NestJS 开发服务：
+
+```bash
+npm run start:dev
+```
+
+健康检查：
+
+```bash
+curl http://localhost:3000/health
+```
+
+工单分类示例：
+
+```bash
+curl -X POST http://localhost:3000/tickets/classify \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Checkout is down","description":"Urgent customer escalation"}'
+```
+
+## 常用命令
+
+```bash
+npm run build
+npm run lint
+npm run format
+npm run test
+npm run docker:down
+```
+
+## 环境变量
+
+复制示例配置后按需调整：
+
+```bash
+cp apps/ai-ticket-classifier/.env.example apps/ai-ticket-classifier/.env
+```

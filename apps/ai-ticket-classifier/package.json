@@ -1,0 +1,22 @@
+{
+  "name": "ai-ticket-classifier",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NestJS service for classifying support tickets with AI workflows.",
+  "scripts": {
+    "build": "cd ../.. && nest build ai-ticket-classifier",
+    "start": "node ../../dist/apps/ai-ticket-classifier/main.js",
+    "start:dev": "cd ../.. && nest start ai-ticket-classifier --watch",
+    "start:debug": "cd ../.. && nest start ai-ticket-classifier --debug --watch",
+    "test": "jest --config jest.config.ts",
+    "test:watch": "jest --config jest.config.ts --watch",
+    "test:cov": "jest --config jest.config.ts --coverage"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  }
+}

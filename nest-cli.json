@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "monorepo": true,
+  "root": "apps/ai-ticket-classifier",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/ai-ticket-classifier/tsconfig.app.json"
+  },
+  "projects": {
+    "ai-ticket-classifier": {
+      "type": "application",
+      "root": "apps/ai-ticket-classifier",
+      "entryFile": "main",
+      "sourceRoot": "apps/ai-ticket-classifier/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ai-ticket-classifier/tsconfig.app.json"
+      }
+    }
+  }
+}
