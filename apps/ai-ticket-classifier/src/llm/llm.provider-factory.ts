@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { GLMProvider } from './glm.provider';
 import { LLMBaseProvider } from './llm.base-provider';
 
-export type LLMProviderName = 'glm';
+export const LLMProviderNames = ['glm'] as const;
+export type LLMProviderName = (typeof LLMProviderNames)[number];
 
 @Injectable()
 export class LLMProviderFactory {

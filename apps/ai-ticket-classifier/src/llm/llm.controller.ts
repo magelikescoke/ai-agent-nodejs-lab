@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Post } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post } from '@nestjs/common';
 import { LLMGenerateTextDto } from './llm.dto';
 import { LLMService } from './llm.service';
 
@@ -11,6 +11,13 @@ export class LLMController {
   public async generateText(@Body() generateTextDto: LLMGenerateTextDto) {
     return {
       text: await this.llmService.generateText(generateTextDto.prompt),
+    };
+  }
+
+  @Get('/health')
+  public async getHealth() {
+    return {
+      health: await this.llmService.getHealth(),
     };
   }
 }

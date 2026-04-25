@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { Body, Controller, Get, Post, UseInterceptors } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ClassifyTicketDto } from './dto/classify-ticket.dto';
 
@@ -7,6 +8,9 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('health')
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('health:app')
+  @CacheTTL(30_000)
   getHealth() {
     return this.appService.getHealth();
   }

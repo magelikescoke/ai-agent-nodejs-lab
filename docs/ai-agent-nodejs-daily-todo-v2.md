@@ -95,9 +95,9 @@
 - [x] 封装 `LlmModule`
 - [x] 实现 `LlmService.generateText()`
 - [x] 支持环境变量配置 model、apiKey、baseURL
-- [ ] 加入 timeout、基础错误处理
-- [ ] 写一个 `/health/llm` 测试接口
-- [ ] 记录每次请求耗时
+- [x] 加入 timeout、基础错误处理
+- [x] 写一个 `/llm/health` 测试接口
+- [x] 记录每次请求耗时
 - [x] README 增加环境变量说明
 - [ ] Python 30 分钟：学习 list、dict、函数
 
@@ -131,11 +131,11 @@
 
 ### Day 5：Redis 缓存与幂等
 
-- [ ] 接入 Redis
+- [x] 接入 Redis
 - [ ] 对相同 ticket content 做 hash
 - [ ] 命中缓存时不再调用 LLM
 - [ ] 缓存返回标记 `cacheHit: true`
-- [ ] 设计缓存 TTL
+- [x] 设计缓存 TTL
 - [ ] 加入简单 rate limit
 - [ ] 写 Jest 单测覆盖 hash 与缓存逻辑
 - [ ] Python 30 分钟：写一个 CSV/JSON 转换脚本
