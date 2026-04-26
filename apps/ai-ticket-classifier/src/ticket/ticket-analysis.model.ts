@@ -28,6 +28,15 @@ export class TicketAnalysisRecord {
   @Prop({ type: String, trim: true })
   suggestedAction?: string;
 
+  @Prop({ type: String, trim: true })
+  rawOutput?: string;
+
+  @Prop({ type: Object })
+  parsedOutput?: unknown;
+
+  @Prop({ type: Number, required: true, default: 0, min: 0 })
+  retryCount!: number;
+
   @Prop({
     type: String,
     enum: TicketAnalysisStatuses,
@@ -58,7 +67,12 @@ TicketAnalysisMongoSchema.index({ content: 'text', overview: 'text' });
 
 TicketAnalysisMongoSchema.pre<TicketAnalysisDocument>('validate', function validateStatusFields() {
   if (this.status === 'analyzed') {
-    if (!this.category || !hasText(this.overview) || !hasText(this.suggestedAction) || !this.analyzedAt) {
+    if (
+      !this.category ||
+      !hasText(this.overview) ||
+      !hasText(this.suggestedAction) ||
+      !this.analyzedAt
+    ) {
       throw new Error(
         'Analyzed ticket analysis requires category, overview, suggestedAction, and analyzedAt.',
       );

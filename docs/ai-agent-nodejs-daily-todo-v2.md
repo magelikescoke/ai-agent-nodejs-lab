@@ -109,9 +109,9 @@
 - [x] 设计工单分类枚举：billing / technical / account / complaint / other
 - [x] 实现 `analyzeTicket()`，要求模型输出 JSON
 - [x] 使用 Zod 校验模型输出
-- [ ] 校验失败时自动 retry 1 次
-- [ ] 记录原始输出和解析后输出
-- [ ] 准备 10 条测试工单
+- [x] 校验失败时自动 retry 1 次
+- [x] 记录原始输出和解析后输出
+- [x] 准备 10 条测试工单
 - [ ] Python 30 分钟：学习类型标注和 pydantic 基础概念
 
 验收：输入工单文本，稳定返回合法 JSON。

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ticket-001",
+    "content": "I was charged twice for the same monthly subscription and need a refund.",
+    "expectedCategory": "billing"
+  },
+  {
+    "id": "ticket-002",
+    "content": "The dashboard keeps returning a 500 error when I open the reports page.",
+    "expectedCategory": "technical"
+  },
+  {
+    "id": "ticket-003",
+    "content": "I cannot reset my password because the verification email never arrives.",
+    "expectedCategory": "account"
+  },
+  {
+    "id": "ticket-004",
+    "content": "Your support team closed my issue without solving it and I am very unhappy.",
+    "expectedCategory": "complaint"
+  },
+  {
+    "id": "ticket-005",
+    "content": "Can you tell me whether you support annual plans for nonprofits?",
+    "expectedCategory": "other"
+  },
+  {
+    "id": "ticket-006",
+    "content": "My invoice shows the wrong company tax ID and billing address.",
+    "expectedCategory": "billing"
+  },
+  {
+    "id": "ticket-007",
+    "content": "File uploads fail whenever the CSV is larger than 10 MB.",
+    "expectedCategory": "technical"
+  },
+  {
+    "id": "ticket-008",
+    "content": "Please change the owner email on our workspace admin account.",
+    "expectedCategory": "account"
+  },
+  {
+    "id": "ticket-009",
+    "content": "The last agent was rude and ignored the details I sent three times.",
+    "expectedCategory": "complaint"
+  },
+  {
+    "id": "ticket-010",
+    "content": "Where can I find your data processing agreement and security questionnaire?",
+    "expectedCategory": "other"
+  }
+]

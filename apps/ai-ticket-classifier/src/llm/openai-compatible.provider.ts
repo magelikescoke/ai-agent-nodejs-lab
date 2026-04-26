@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { LLMBaseProvider, type LLMResponseFormat } from './llm.base-provider';
+import { LLMBaseProvider, type LLMJsonOutput, type LLMResponseFormat } from './llm.base-provider';
 
 export interface OpenAiCompatibleProviderConfig {
   apiKey: string;
@@ -45,6 +45,20 @@ export abstract class OpenAiCompatibleProvider extends LLMBaseProvider {
     userPrompt: string,
     format: LLMResponseFormat,
   ): Promise<T> {
+    const { parsedOutput } = await this.generateJsonOutputWithRaw<T>(
+      systemPrompt,
+      userPrompt,
+      format,
+    );
+
+    return parsedOutput;
+  }
+
+  public async generateJsonOutputWithRaw<T>(
+    systemPrompt: string,
+    userPrompt: string,
+    format: LLMResponseFormat,
+  ): Promise<LLMJsonOutput<T>> {
     const client = this.getClient();
     const res = await client.chat.completions.create({
       model: this.getDefaultModelName(),
@@ -61,7 +75,12 @@ export abstract class OpenAiCompatibleProvider extends LLMBaseProvider {
 
     const choice = res.choices[0];
     if (choice?.finish_reason === 'stop' && choice.message.content) {
-      return JSON.parse(choice.message.content) as T;
+      const rawOutput = choice.message.content;
+
+      return {
+        rawOutput,
+        parsedOutput: JSON.parse(rawOutput) as T,
+      };
     }
 
     throw new Error(`LLM JSON output failed with finish_reason=${choice?.finish_reason ?? 'none'}`);
