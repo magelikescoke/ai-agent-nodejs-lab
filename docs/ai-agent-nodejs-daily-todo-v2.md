@@ -120,10 +120,10 @@
 
 - [x] 创建 `TicketModule`
 - [x] 实现 `POST /tickets/analyze`
-- [ ] 保存请求、输出、模型名、耗时、状态到 MongoDB
-- [ ] 实现 `GET /tickets/:id`
-- [ ] 加入 DTO 校验
-- [ ] 加入异常过滤器
+- [x] 保存请求、输出、模型名、耗时、状态到 MongoDB
+- [x] 实现 `GET /tickets/:id`
+- [x] 加入 DTO 校验
+- [x] 加入异常过滤器
 - [x] README 增加 API 示例
 - [ ] Python 30 分钟：读取 JSON 文件并打印统计
 

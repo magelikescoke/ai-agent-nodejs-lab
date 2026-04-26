@@ -76,6 +76,14 @@ curl -X POST http://localhost:3000/tickets/analyze \
 
 `POST /tickets/analyze` 会调用默认 LLM Provider 生成结构化 JSON，并将请求内容、分类结果和处理状态写入 MongoDB。
 
+查询分析记录：
+
+```bash
+curl http://localhost:3000/tickets/507f1f77bcf86cd799439011
+```
+
+分析记录会保存请求内容、原始模型输出、解析后的结构化输出、模型名、耗时、重试次数和处理状态。
+
 ## 常用命令
 
 ```bash

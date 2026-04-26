@@ -28,6 +28,11 @@ export class LLMService {
     return this.llmFactory.getProvider(name);
   }
 
+  public getDefaultModelName(): string {
+    const defaultLlm: LLMProviderName = 'glm';
+    return this.getProvider(defaultLlm).getDefaultModelName();
+  }
+
   public async generateText(prompt: string) {
     const defaultLlm: LLMProviderName = 'glm';
     return this.getProvider(defaultLlm).generateText(prompt);

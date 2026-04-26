@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ZodError } from 'zod';
@@ -50,18 +50,15 @@ export class TicketService {
   ) {}
 
   async analyzeTicket(dto: AnalyzeTicketDto) {
-    const content = dto.content?.trim();
-
-    if (!content) {
-      throw new BadRequestException('content is required');
-    }
-
+    const content = dto.content;
     const startedAt = Date.now();
+    const modelName = this.llmService.getDefaultModelName();
 
     try {
       const { analysis, rawOutput, parsedOutput, retryCount } =
         await this.generateValidatedAnalysis(content);
       const analyzedAt = new Date();
+      const latencyMs = Date.now() - startedAt;
 
       const record = await this.ticketAnalysisModel.create({
         content,
@@ -69,27 +66,17 @@ export class TicketService {
         rawOutput,
         parsedOutput,
         retryCount,
+        modelName,
+        latencyMs,
         status: 'analyzed',
         submittedAt: new Date(startedAt),
         analyzedAt,
       });
 
-      return {
-        id: record.id,
-        content: record.content,
-        category: record.category,
-        overview: record.overview,
-        suggestedAction: record.suggestedAction,
-        status: record.status,
-        retryCount: record.retryCount,
-        latencyMs: Date.now() - startedAt,
-        submittedAt: record.submittedAt,
-        analyzedAt: record.analyzedAt,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      };
+      return this.serializeTicketAnalysisRecord(record);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Ticket analysis failed';
+      const latencyMs = Date.now() - startedAt;
 
       const record = await this.ticketAnalysisModel.create({
         content,
@@ -99,21 +86,23 @@ export class TicketService {
         parsedOutput:
           error instanceof TicketAnalysisValidationError ? error.parsedOutput : undefined,
         retryCount: error instanceof TicketAnalysisValidationError ? error.retryCount : 0,
+        modelName,
+        latencyMs,
         submittedAt: new Date(startedAt),
       });
 
-      return {
-        id: record.id,
-        content: record.content,
-        status: record.status,
-        errorMsg: record.errorMsg,
-        retryCount: record.retryCount,
-        latencyMs: Date.now() - startedAt,
-        submittedAt: record.submittedAt,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      };
+      return this.serializeTicketAnalysisRecord(record);
     }
+  }
+
+  async getTicketAnalysis(id: string) {
+    const record = await this.ticketAnalysisModel.findById(id).exec();
+
+    if (!record) {
+      throw new NotFoundException('ticket analysis not found');
+    }
+
+    return this.serializeTicketAnalysisRecord(record);
   }
 
   private async generateValidatedAnalysis(content: string): Promise<ValidatedTicketAnalysis> {
@@ -162,5 +151,26 @@ export class TicketService {
       'Retry once and return only a JSON object matching the required schema.',
       `Ticket content: ${content}`,
     ].join('\n');
+  }
+
+  private serializeTicketAnalysisRecord(record: TicketAnalysisRecord & { id?: string }) {
+    return {
+      id: record.id,
+      content: record.content,
+      category: record.category,
+      overview: record.overview,
+      suggestedAction: record.suggestedAction,
+      rawOutput: record.rawOutput,
+      parsedOutput: record.parsedOutput,
+      status: record.status,
+      errorMsg: record.errorMsg,
+      retryCount: record.retryCount,
+      modelName: record.modelName,
+      latencyMs: record.latencyMs,
+      submittedAt: record.submittedAt,
+      analyzedAt: record.analyzedAt,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    };
   }
 }
