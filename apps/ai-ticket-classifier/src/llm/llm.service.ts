@@ -3,6 +3,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { LLMProviderFactory, LLMProviderName, LLMProviderNames } from './llm.provider-factory';
 import Bluebird from 'bluebird';
+import type { LLMResponseFormat } from './llm.base-provider';
+
 import _ from 'lodash';
 
 const LLM_HEALTH_CACHE_TTL_MS = 60_000;
@@ -29,6 +31,15 @@ export class LLMService {
   public async generateText(prompt: string) {
     const defaultLlm: LLMProviderName = 'glm';
     return this.getProvider(defaultLlm).generateText(prompt);
+  }
+
+  public async generateJsonOutput<T>(
+    systemPrompt: string,
+    userPrompt: string,
+    format: LLMResponseFormat,
+  ): Promise<T> {
+    const defaultLlm: LLMProviderName = 'glm';
+    return this.getProvider(defaultLlm).generateJsonOutput<T>(systemPrompt, userPrompt, format);
   }
 
   public async getHealth(): Promise<Array<LLMHealthResult>> {

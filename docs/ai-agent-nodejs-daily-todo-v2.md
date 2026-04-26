@@ -105,10 +105,10 @@
 
 ### Day 3：结构化输出与 Zod Schema
 
-- [ ] 定义 `TicketAnalysisSchema`
-- [ ] 设计工单分类枚举：billing / technical / account / complaint / other
-- [ ] 实现 `analyzeTicket()`，要求模型输出 JSON
-- [ ] 使用 Zod 校验模型输出
+- [x] 定义 `TicketAnalysisSchema`
+- [x] 设计工单分类枚举：billing / technical / account / complaint / other
+- [x] 实现 `analyzeTicket()`，要求模型输出 JSON
+- [x] 使用 Zod 校验模型输出
 - [ ] 校验失败时自动 retry 1 次
 - [ ] 记录原始输出和解析后输出
 - [ ] 准备 10 条测试工单
@@ -118,13 +118,13 @@
 
 ### Day 4：NestJS API 与 MongoDB 持久化
 
-- [ ] 创建 `TicketModule`
-- [ ] 实现 `POST /tickets/analyze`
+- [x] 创建 `TicketModule`
+- [x] 实现 `POST /tickets/analyze`
 - [ ] 保存请求、输出、模型名、耗时、状态到 MongoDB
 - [ ] 实现 `GET /tickets/:id`
 - [ ] 加入 DTO 校验
 - [ ] 加入异常过滤器
-- [ ] README 增加 API 示例
+- [x] README 增加 API 示例
 - [ ] Python 30 分钟：读取 JSON 文件并打印统计
 
 验收：一次分析请求能完整落库并查询。

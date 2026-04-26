@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { LLMBaseProvider } from './llm.base-provider';
+import { LLMBaseProvider, type LLMResponseFormat } from './llm.base-provider';
 
 export interface OpenAiCompatibleProviderConfig {
   apiKey: string;
@@ -38,5 +38,32 @@ export abstract class OpenAiCompatibleProvider extends LLMBaseProvider {
     });
 
     return res.choices[0]?.message.content ?? '';
+  }
+
+  public async generateJsonOutput<T>(
+    systemPrompt: string,
+    userPrompt: string,
+    format: LLMResponseFormat,
+  ): Promise<T> {
+    const client = this.getClient();
+    const res = await client.chat.completions.create({
+      model: this.getDefaultModelName(),
+      temperature: 0.1,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        { role: 'user', content: userPrompt },
+      ],
+      response_format: format,
+    });
+
+    const choice = res.choices[0];
+    if (choice?.finish_reason === 'stop' && choice.message.content) {
+      return JSON.parse(choice.message.content) as T;
+    }
+
+    throw new Error(`LLM JSON output failed with finish_reason=${choice?.finish_reason ?? 'none'}`);
   }
 }

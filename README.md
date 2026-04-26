@@ -1,6 +1,6 @@
 # ai-agent-nodejs-lab
 
-AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 Node.js/NestJS 项目。当前首个应用是 `ai-ticket-classifier`，用于演示工单分类服务的基本 API、测试和本地基础设施。
+AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 Node.js/NestJS 项目。当前首个应用是 `ai-ticket-classifier`，用于演示工单分类、LLM 结构化输出、MongoDB 持久化、测试和本地基础设施。
 
 ## 项目目标
 
@@ -17,7 +17,9 @@ AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 
 - ESLint + Prettier
 - Jest
 - MongoDB
+- Mongoose
 - Redis
+- Zod
 - Docker Compose
 
 ## 项目结构
@@ -67,10 +69,12 @@ curl http://localhost:3000/health
 工单分类示例：
 
 ```bash
-curl -X POST http://localhost:3000/tickets/classify \
+curl -X POST http://localhost:3000/tickets/analyze \
   -H 'Content-Type: application/json' \
-  -d '{"title":"Checkout is down","description":"Urgent customer escalation"}'
+  -d '{"content":"I was charged twice for the same subscription."}'
 ```
+
+`POST /tickets/analyze` 会调用默认 LLM Provider 生成结构化 JSON，并将请求内容、分类结果和处理状态写入 MongoDB。
 
 ## 常用命令
 

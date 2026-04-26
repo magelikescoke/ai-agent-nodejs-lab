@@ -20,6 +20,6 @@ import { LLMController } from './llm.controller';
     LLMService,
   ],
   controllers: [LLMController],
-  exports: [],
+  exports: [LLMService],
 })
 export class LlmModule {}
