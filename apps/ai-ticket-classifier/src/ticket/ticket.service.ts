@@ -1,7 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import type { Cache } from 'cache-manager';
 import { Model } from 'mongoose';
 import { ZodError } from 'zod';
+import { sha256Hex } from '../common/utils';
 import { LLMService } from '../llm/llm.service';
 import { AnalyzeTicketDto } from './dto/analyze-ticket.dto';
 import { TicketAnalysisMongoModelName, TicketAnalysisRecord } from './ticket-analysis.model';
@@ -13,6 +16,7 @@ import {
 } from './ticket-analysis.schema';
 
 const TICKET_ANALYSIS_MAX_ATTEMPTS = 2;
+const TICKET_ANALYSIS_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const TICKET_ANALYSIS_SYSTEM_PROMPT = [
   'You are a support ticket triage assistant.',
@@ -28,6 +32,26 @@ interface ValidatedTicketAnalysis {
   rawOutput: string;
   parsedOutput: TicketAnalysis;
   retryCount: number;
+}
+
+interface TicketAnalysisResponse {
+  id?: string;
+  content: string;
+  category?: string;
+  overview?: string;
+  suggestedAction?: string;
+  rawOutput?: string;
+  parsedOutput?: unknown;
+  status: string;
+  errorMsg?: string;
+  retryCount: number;
+  modelName?: string;
+  latencyMs?: number;
+  cacheHit: boolean;
+  submittedAt: Date;
+  analyzedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 class TicketAnalysisValidationError extends Error {
@@ -47,10 +71,21 @@ export class TicketService {
     private readonly llmService: LLMService,
     @InjectModel(TicketAnalysisMongoModelName)
     private readonly ticketAnalysisModel: Model<TicketAnalysisRecord>,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   async analyzeTicket(dto: AnalyzeTicketDto) {
     const content = dto.content;
+    const cached = await this.getTicketFromCache(content);
+
+    if (cached) {
+      return {
+        ...cached,
+        cacheHit: true,
+      };
+    }
+
     const startedAt = Date.now();
     const modelName = this.llmService.getDefaultModelName();
 
@@ -73,7 +108,10 @@ export class TicketService {
         analyzedAt,
       });
 
-      return this.serializeTicketAnalysisRecord(record);
+      const response = this.serializeTicketAnalysisRecord(record);
+      await this.setTicketCache(content, response);
+
+      return response;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Ticket analysis failed';
       const latencyMs = Date.now() - startedAt;
@@ -167,10 +205,26 @@ export class TicketService {
       retryCount: record.retryCount,
       modelName: record.modelName,
       latencyMs: record.latencyMs,
+      cacheHit: false,
       submittedAt: record.submittedAt,
       analyzedAt: record.analyzedAt,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
-    };
+    } satisfies TicketAnalysisResponse;
+  }
+
+  private getContentCacheKey(content: string): string {
+    const hash = sha256Hex(content);
+    return `TicketContentCache:${hash}`;
+  }
+
+  private async getTicketFromCache(content: string) {
+    const key = this.getContentCacheKey(content);
+    return this.cacheManager.get<TicketAnalysisResponse>(key);
+  }
+
+  private async setTicketCache(content: string, response: TicketAnalysisResponse): Promise<void> {
+    const key = this.getContentCacheKey(content);
+    await this.cacheManager.set(key, response, TICKET_ANALYSIS_CACHE_TTL_MS);
   }
 }

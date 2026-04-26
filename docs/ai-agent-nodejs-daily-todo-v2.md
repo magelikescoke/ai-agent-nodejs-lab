@@ -132,12 +132,12 @@
 ### Day 5：Redis 缓存与幂等
 
 - [x] 接入 Redis
-- [ ] 对相同 ticket content 做 hash
-- [ ] 命中缓存时不再调用 LLM
-- [ ] 缓存返回标记 `cacheHit: true`
+- [x] 对相同 ticket content 做 hash
+- [x] 命中缓存时不再调用 LLM
+- [x] 缓存返回标记 `cacheHit: true`
 - [x] 设计缓存 TTL
-- [ ] 加入简单 rate limit
-- [ ] 写 Jest 单测覆盖 hash 与缓存逻辑
+- [x] 加入简单 rate limit
+- [x] 写 Jest 单测覆盖 hash 与缓存逻辑
 - [ ] Python 30 分钟：写一个 CSV/JSON 转换脚本
 
 验收：重复请求能命中缓存，节省 LLM 调用。

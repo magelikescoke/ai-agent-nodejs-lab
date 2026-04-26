@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { hasText } from '../common/utils';
 import {
   TicketAnalysisCategories,
   TicketAnalysisStatuses,
@@ -93,10 +94,6 @@ TicketAnalysisMongoSchema.pre<TicketAnalysisDocument>('validate', function valid
     throw new Error('Completed ticket analysis requires modelName and latencyMs.');
   }
 });
-
-function hasText(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
-}
 
 function hasAnalysisMetadata(record: TicketAnalysisDocument): boolean {
   return hasText(record.modelName) && typeof record.latencyMs === 'number' && record.latencyMs >= 0;
