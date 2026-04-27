@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import type { Cache } from 'cache-manager';
 import type { Model } from 'mongoose';
 import { LLMService } from '../llm/llm.service';
@@ -6,20 +7,22 @@ import { TicketService } from './ticket.service';
 
 function createTicketAnalysisModelMock() {
   return {
-    create: jest.fn(async (doc: Partial<TicketAnalysisRecord>) => ({
-      id: 'ticket-analysis-id',
-      createdAt: new Date('2026-04-26T08:00:00.000Z'),
-      updatedAt: new Date('2026-04-26T08:00:00.000Z'),
-      ...doc,
-    })),
+    create: jest.fn((doc: Partial<TicketAnalysisRecord>) =>
+      Promise.resolve({
+        id: 'ticket-analysis-id',
+        createdAt: new Date('2026-04-26T08:00:00.000Z'),
+        updatedAt: new Date('2026-04-26T08:00:00.000Z'),
+        ...doc,
+      }),
+    ),
     findById: jest.fn(),
   };
 }
 
 function createCacheManagerMock() {
   return {
-    get: jest.fn(async (_key: string): Promise<unknown> => undefined),
-    set: jest.fn(async (_key: string, _value: unknown, _ttl?: number): Promise<void> => undefined),
+    get: jest.fn((): Promise<unknown> => Promise.resolve(undefined)),
+    set: jest.fn((): Promise<void> => Promise.resolve()),
   };
 }
 
@@ -197,28 +200,30 @@ describe('TicketService', () => {
     const ticketAnalysisModel = createTicketAnalysisModelMock();
     const cacheManager = createCacheManagerMock();
     ticketAnalysisModel.findById.mockReturnValue({
-      exec: jest.fn(async () => ({
-        id: '507f1f77bcf86cd799439011',
-        content: 'I cannot sign in.',
-        category: 'account',
-        overview: 'Customer cannot access the account.',
-        suggestedAction: 'Check account recovery settings.',
-        rawOutput:
-          '{"category":"account","overview":"Customer cannot access the account.","suggestedAction":"Check account recovery settings."}',
-        parsedOutput: {
+      exec: jest.fn(() =>
+        Promise.resolve({
+          id: '507f1f77bcf86cd799439011',
+          content: 'I cannot sign in.',
           category: 'account',
           overview: 'Customer cannot access the account.',
           suggestedAction: 'Check account recovery settings.',
-        },
-        status: 'analyzed',
-        retryCount: 0,
-        modelName: 'glm-test',
-        latencyMs: 321,
-        submittedAt: new Date('2026-04-26T08:00:00.000Z'),
-        analyzedAt: new Date('2026-04-26T08:00:01.000Z'),
-        createdAt: new Date('2026-04-26T08:00:01.000Z'),
-        updatedAt: new Date('2026-04-26T08:00:01.000Z'),
-      })),
+          rawOutput:
+            '{"category":"account","overview":"Customer cannot access the account.","suggestedAction":"Check account recovery settings."}',
+          parsedOutput: {
+            category: 'account',
+            overview: 'Customer cannot access the account.',
+            suggestedAction: 'Check account recovery settings.',
+          },
+          status: 'analyzed',
+          retryCount: 0,
+          modelName: 'glm-test',
+          latencyMs: 321,
+          submittedAt: new Date('2026-04-26T08:00:00.000Z'),
+          analyzedAt: new Date('2026-04-26T08:00:01.000Z'),
+          createdAt: new Date('2026-04-26T08:00:01.000Z'),
+          updatedAt: new Date('2026-04-26T08:00:01.000Z'),
+        }),
+      ),
     });
     const service = new TicketService(
       llmService,
@@ -242,7 +247,7 @@ describe('TicketService', () => {
     const ticketAnalysisModel = createTicketAnalysisModelMock();
     const cacheManager = createCacheManagerMock();
     ticketAnalysisModel.findById.mockReturnValue({
-      exec: jest.fn(async () => null),
+      exec: jest.fn(() => Promise.resolve(null)),
     });
     const service = new TicketService(
       llmService,

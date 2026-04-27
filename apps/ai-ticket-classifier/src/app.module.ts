@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
+import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import KeyvRedis from '@keyv/redis';
@@ -42,6 +43,16 @@ import { TicketModule } from './ticket/ticket.module';
       },
       inject: [ConfigService],
     }),
+    BullModule.forRootAsync({
+      useFactory: (configService: ConfigService) => {
+        const appConfiguration = configService.getOrThrow<AppConfiguration>('app');
+
+        return {
+          connection: getRedisConnectionOptions(appConfiguration.redisUrl),
+        };
+      },
+      inject: [ConfigService],
+    }),
     LlmModule,
     TicketModule,
   ],
@@ -59,3 +70,18 @@ import { TicketModule } from './ticket/ticket.module';
   ],
 })
 export class AppModule {}
+
+function getRedisConnectionOptions(redisUrl: string) {
+  const url = new URL(redisUrl);
+  const dbPath = url.pathname.replace('/', '');
+
+  return {
+    host: url.hostname,
+    port: Number(url.port || 6379),
+    username: url.username ? decodeURIComponent(url.username) : undefined,
+    password: url.password ? decodeURIComponent(url.password) : undefined,
+    db: dbPath ? Number(dbPath) : undefined,
+    tls: url.protocol === 'rediss:' ? {} : undefined,
+    maxRetriesPerRequest: null,
+  };
+}

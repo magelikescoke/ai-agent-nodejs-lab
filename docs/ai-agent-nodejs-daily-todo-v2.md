@@ -144,25 +144,25 @@
 
 ### Day 6：BullMQ 批量任务
 
-- [ ] 接入 BullMQ
-- [ ] 实现 `POST /tickets/batch-analyze`
-- [ ] 实现 `GET /jobs/:id`
-- [ ] 每个工单作为 job 或 batch 子任务执行
-- [ ] job 失败时记录原因
-- [ ] 支持重试策略
-- [ ] README 增加批量任务流程图
+- [x] 接入 BullMQ
+- [x] 实现 `POST /tickets/batch-analyze`
+- [x] 实现 `GET /jobs/:id`
+- [x] 每个工单作为 job 或 batch 子任务执行
+- [x] job 失败时记录原因
+- [x] 支持重试策略
+- [x] README 增加批量任务流程图
 - [ ] Python 30 分钟：学习 argparse，写命令行脚本雏形
 
 验收：批量提交 20 条工单，能异步处理并查询状态。
 
 ### Day 7：周复盘与小型发布
 
-- [ ] 整理 Week 1 README
-- [ ] 增加架构图：API -> Queue -> LLM -> MongoDB -> Redis
-- [ ] 补 20 条测试样例
-- [ ] 写 1 篇短文：`我如何用 NestJS 做稳定的 LLM 结构化输出`
-- [ ] Review 代码，删除临时代码
-- [ ] 打 tag：`week1-ticket-classifier-mvp`
+- [x] 整理 Week 1 README
+- [x] 增加架构图：API -> Queue -> LLM -> MongoDB -> Redis
+- [x] 补 20 条测试样例
+- [x] 写 1 篇短文：`我如何用 NestJS 做稳定的 LLM 结构化输出`
+- [x] Review 代码，删除临时代码
+- [x] 打 tag：`week1-ticket-classifier-mvp`
 - [ ] 整理 5 道面试题：structured output、retry、缓存、幂等、token 成本
 
 验收：项目可以给别人 clone 后跑起来。

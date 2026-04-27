@@ -5,8 +5,8 @@ import { ApiRateLimitGuard } from './api-rate-limit.guard';
 
 function createCacheManagerMock() {
   return {
-    get: jest.fn(async (_key: string): Promise<unknown> => undefined),
-    set: jest.fn(async (_key: string, _value: unknown, _ttl?: number): Promise<void> => undefined),
+    get: jest.fn((): Promise<unknown> => Promise.resolve(undefined)),
+    set: jest.fn((): Promise<void> => Promise.resolve()),
   };
 }
 

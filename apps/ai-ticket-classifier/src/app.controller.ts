@@ -1,7 +1,6 @@
 import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
-import { Body, Controller, Get, Post, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { AppService } from './app.service';
-import { ClassifyTicketDto } from './dto/classify-ticket.dto';
 
 @Controller()
 export class AppController {
@@ -13,10 +12,5 @@ export class AppController {
   @CacheTTL(30_000)
   getHealth() {
     return this.appService.getHealth();
-  }
-
-  @Post('tickets/classify')
-  classifyTicket(@Body() ticket: ClassifyTicketDto) {
-    return this.appService.classifyTicket(ticket);
   }
 }

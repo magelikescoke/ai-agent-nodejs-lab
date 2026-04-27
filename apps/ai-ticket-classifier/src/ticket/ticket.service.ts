@@ -34,7 +34,7 @@ interface ValidatedTicketAnalysis {
   retryCount: number;
 }
 
-interface TicketAnalysisResponse {
+export interface TicketAnalysisResponse {
   id?: string;
   content: string;
   category?: string;

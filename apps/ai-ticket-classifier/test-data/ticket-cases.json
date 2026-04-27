@@ -48,5 +48,55 @@
     "id": "ticket-010",
     "content": "Where can I find your data processing agreement and security questionnaire?",
     "expectedCategory": "other"
+  },
+  {
+    "id": "ticket-011",
+    "content": "The payment page keeps spinning after I enter my card details.",
+    "expectedCategory": "billing"
+  },
+  {
+    "id": "ticket-012",
+    "content": "Our webhook endpoint stopped receiving delivery events after yesterday's deployment.",
+    "expectedCategory": "technical"
+  },
+  {
+    "id": "ticket-013",
+    "content": "I need to disable two-factor authentication because I lost my authenticator device.",
+    "expectedCategory": "account"
+  },
+  {
+    "id": "ticket-014",
+    "content": "I have contacted support four times and nobody has fixed the problem.",
+    "expectedCategory": "complaint"
+  },
+  {
+    "id": "ticket-015",
+    "content": "Do you have a public roadmap for upcoming integrations?",
+    "expectedCategory": "other"
+  },
+  {
+    "id": "ticket-016",
+    "content": "Please cancel my subscription and confirm that I will not be charged next month.",
+    "expectedCategory": "billing"
+  },
+  {
+    "id": "ticket-017",
+    "content": "The API returns 429 even though we are below the documented rate limit.",
+    "expectedCategory": "technical"
+  },
+  {
+    "id": "ticket-018",
+    "content": "A former employee still has admin access to our organization.",
+    "expectedCategory": "account"
+  },
+  {
+    "id": "ticket-019",
+    "content": "Your product lost our saved report and this is unacceptable for our team.",
+    "expectedCategory": "complaint"
+  },
+  {
+    "id": "ticket-020",
+    "content": "Can you share your standard vendor onboarding form and support hours?",
+    "expectedCategory": "other"
   }
 ]

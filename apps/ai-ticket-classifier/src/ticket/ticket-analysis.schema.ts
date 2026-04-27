@@ -8,12 +8,7 @@ export const TicketAnalysisCategories = [
   'other',
 ] as const;
 
-export const TicketAnalysisStatuses = [
-  'submitted',
-  'analyzing',
-  'analyzed',
-  'error',
-] as const;
+export const TicketAnalysisStatuses = ['submitted', 'analyzing', 'analyzed', 'error'] as const;
 
 export const TicketAnalysisCategorySchema = z.enum(TicketAnalysisCategories);
 export const TicketAnalysisStatusSchema = z.enum(TicketAnalysisStatuses);

@@ -1,13 +1,16 @@
-# ai-agent-nodejs-lab
+# AI Agent Node.js Lab
 
-AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 Node.js/NestJS 项目。当前首个应用是 `ai-ticket-classifier`，用于演示工单分类、LLM 结构化输出、MongoDB 持久化、测试和本地基础设施。
+AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 Node.js/NestJS 项目。当前应用 `ai-ticket-classifier` 是一个 AI 工单分类与结构化输出系统，用来演示 LLM API 接入、结构化 JSON 输出、Zod 校验、MongoDB 持久化、Redis 缓存、BullMQ 批量任务和基础评测样例。
 
-## 项目目标
+## Week 1 MVP
 
-- 搭建一个可扩展的 Node.js AI Agent 实验仓库。
-- 使用 NestJS 构建可测试、可维护的后端服务。
-- 为后续接入 LLM、队列、缓存、持久化和评估流程预留工程结构。
-- 通过 Docker Compose 提供 MongoDB 和 Redis 本地依赖。
+- `POST /tickets/analyze`：同步分析单条工单，返回受控 JSON。
+- `POST /tickets/batch-analyze`：批量提交工单，每条工单进入 BullMQ job。
+- `GET /tickets/:id`：查询 MongoDB 中的分析记录。
+- `GET /jobs/:id`：查询 BullMQ job 状态、进度、失败原因和结果。
+- LLM 输出使用 JSON Schema + Zod 双层约束，校验失败自动 retry 1 次。
+- 相同工单内容使用 SHA-256 做缓存 key，命中 Redis 后跳过 LLM 调用。
+- API 层有简单 IP rate limit，Worker 层通过 BullMQ 控制并发和频率。
 
 ## 技术栈
 
@@ -19,6 +22,7 @@ AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 
 - MongoDB
 - Mongoose
 - Redis
+- BullMQ
 - Zod
 - Docker Compose
 
@@ -29,6 +33,11 @@ AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 
 ├── apps/
 │   └── ai-ticket-classifier/
 │       ├── src/
+│       │   ├── llm/
+│       │   ├── ticket/
+│       │   ├── common/
+│       │   └── config/
+│       ├── test-data/
 │       ├── jest.config.ts
 │       ├── package.json
 │       ├── tsconfig.app.json
@@ -38,6 +47,24 @@ AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 
 ├── nest-cli.json
 ├── package.json
 └── tsconfig.json
+```
+
+## 架构
+
+```mermaid
+flowchart LR
+  Client[Client] --> API[NestJS API]
+  API --> RateLimit[API Rate Limit]
+  RateLimit --> Cache{Redis Cache}
+  Cache -- hit --> API
+  Cache -- miss --> Queue[BullMQ Queue]
+  Queue --> Worker[Ticket Worker]
+  Worker --> LLM[LLM Provider]
+  LLM --> Schema[JSON Schema + Zod]
+  Schema --> Mongo[(MongoDB)]
+  Schema --> Cache
+  Mongo --> API
+  Queue --> JobStatus[GET /jobs/:id]
 ```
 
 ## 运行方式
@@ -66,7 +93,7 @@ npm run start:dev
 curl http://localhost:3000/health
 ```
 
-工单分类示例：
+同步分析工单：
 
 ```bash
 curl -X POST http://localhost:3000/tickets/analyze \
@@ -84,6 +111,66 @@ curl http://localhost:3000/tickets/507f1f77bcf86cd799439011
 
 分析记录会保存请求内容、原始模型输出、解析后的结构化输出、模型名、耗时、重试次数和处理状态。
 
+## API
+
+| Method | Path                     | 说明                       |
+| ------ | ------------------------ | -------------------------- |
+| `GET`  | `/health`                | 服务健康检查               |
+| `GET`  | `/llm/health`            | LLM Provider 健康检查      |
+| `POST` | `/llm/generate/text`     | 调试用文本生成接口         |
+| `POST` | `/tickets/analyze`       | 同步分析单条工单           |
+| `GET`  | `/tickets/:id`           | 查询工单分析记录           |
+| `POST` | `/tickets/batch-analyze` | 批量提交异步分析任务       |
+| `GET`  | `/jobs/:id`              | 查询异步任务状态与处理结果 |
+
+批量异步分析：
+
+```bash
+curl -X POST http://localhost:3000/tickets/batch-analyze \
+  -H 'Content-Type: application/json' \
+  -d '{"tickets":[{"content":"I cannot sign in."},{"content":"The dashboard returns a 500 error."}]}'
+```
+
+查询异步任务：
+
+```bash
+curl http://localhost:3000/jobs/31d7e4df-bd20-4109-8857-f198f522f3a3-0
+```
+
+批量分析会把每条工单提交为一个 BullMQ job，由 worker 控制 LLM 分析并发和频率。
+
+批量任务流程：
+
+```mermaid
+flowchart LR
+  Client[Client] --> API[POST /tickets/batch-analyze]
+  API --> Queue[Redis BullMQ Queue]
+  Queue --> Worker[TicketAnalysisProcessor]
+  Worker --> Cache{Redis Cache Hit?}
+  Cache -- Yes --> Result[Return cached analysis]
+  Cache -- No --> LLM[LLM Provider]
+  LLM --> Validate[Zod validate JSON]
+  Validate --> Mongo[(MongoDB ticket_analyses)]
+  Result --> Job[Job result]
+  Mongo --> Job
+  Client --> Status[GET /jobs/:id]
+  Status --> Queue
+```
+
+## 结构化输出
+
+LLM 输出被限制为以下字段：
+
+```json
+{
+  "category": "billing | technical | account | complaint | other",
+  "overview": "Brief summary of the customer issue.",
+  "suggestedAction": "Recommended next support action."
+}
+```
+
+服务端会用 Zod 做白名单校验，拒绝 schema 外字段和不支持的分类。校验失败时会 retry 1 次，并把原始输出、解析结果、重试次数、模型名和耗时写入 MongoDB。
+
 ## 常用命令
 
 ```bash
@@ -93,6 +180,8 @@ npm run format
 npm run test
 npm run docker:down
 ```
+
+测试样例在 `apps/ai-ticket-classifier/test-data/ticket-cases.json`，当前包含 20 条覆盖 `billing / technical / account / complaint / other` 的工单分类样例。
 
 ## 环境变量
 

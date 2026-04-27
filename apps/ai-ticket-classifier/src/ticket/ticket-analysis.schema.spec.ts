@@ -1,7 +1,4 @@
-import {
-  TicketAnalysisResponseFormat,
-  TicketAnalysisSchema,
-} from './ticket-analysis.schema';
+import { TicketAnalysisResponseFormat, TicketAnalysisSchema } from './ticket-analysis.schema';
 
 describe('TicketAnalysisSchema', () => {
   it('accepts the LLM ticket analysis output', () => {

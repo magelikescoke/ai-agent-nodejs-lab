@@ -18,16 +18,4 @@ describe('AppService', () => {
       service: 'ai-ticket-classifier',
     });
   });
-
-  it('classifies urgent tickets as high priority', () => {
-    expect(
-      service.classifyTicket({
-        title: 'Checkout is down',
-        description: 'Urgent customer escalation',
-      }),
-    ).toMatchObject({
-      category: 'general',
-      priority: 'high',
-    });
-  });
 });
