@@ -163,7 +163,8 @@
 - [x] 写 1 篇短文：`我如何用 NestJS 做稳定的 LLM 结构化输出`
 - [x] Review 代码，删除临时代码
 - [x] 打 tag：`week1-ticket-classifier-mvp`
-- [ ] 整理 5 道面试题：structured output、retry、缓存、幂等、token 成本
+- [x] 整理 5 道面试题：structured output、retry、缓存、幂等、token 成本
+首先是用 Zod 在服务端进行字段校验。如果没有通过校验，我会去调整 Prompt，检查是否使用了结构化输出。
 
 验收：项目可以给别人 clone 后跑起来。
 
@@ -175,12 +176,12 @@
 
 ### Day 8：Prompt Version 管理
 
-- [ ] 把 prompt 从代码中抽离到 `prompts/`
-- [ ] 增加 `promptVersion`
-- [ ] MongoDB 记录 prompt version
-- [ ] 支持通过配置切换 prompt
-- [ ] 增加 few-shot 示例
-- [ ] 测试不同 prompt 对输出稳定性的影响
+- [x] 把 prompt 从代码中抽离到 `prompts/`
+- [x] 增加 `promptVersion`
+- [x] MongoDB 记录 prompt version
+- [x] 支持通过配置切换 prompt
+- [x] 增加 few-shot 示例
+- [x] 测试不同 prompt 对输出稳定性的影响
 - [ ] Python 30 分钟：读取多个 JSON case 并批量执行
 
 验收：每次输出都能追溯使用了哪个 prompt。
