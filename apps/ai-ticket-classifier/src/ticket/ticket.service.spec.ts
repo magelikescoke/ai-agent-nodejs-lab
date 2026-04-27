@@ -44,18 +44,20 @@ describe('TicketService', () => {
         .fn()
         .mockResolvedValueOnce({
           rawOutput:
-            '{"category":"sales","overview":"Customer asks about pricing.","suggestedAction":"Route to billing support."}',
+            '{"category":"sales","priority":"medium","overview":"Customer asks about pricing.","suggestedAction":"Route to billing support."}',
           parsedOutput: {
             category: 'sales',
+            priority: 'medium',
             overview: 'Customer asks about pricing.',
             suggestedAction: 'Route to billing support.',
           },
         })
         .mockResolvedValueOnce({
           rawOutput:
-            '{"category":"billing","overview":"Customer reports a duplicate charge.","suggestedAction":"Check invoice history and refund if confirmed."}',
+            '{"category":"billing","priority":"high","overview":"Customer reports a duplicate charge.","suggestedAction":"Check invoice history and refund if confirmed."}',
           parsedOutput: {
             category: 'billing',
+            priority: 'high',
             overview: 'Customer reports a duplicate charge.',
             suggestedAction: 'Check invoice history and refund if confirmed.',
           },
@@ -80,10 +82,12 @@ describe('TicketService', () => {
     expect(ticketAnalysisModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
         category: 'billing',
+        priority: 'high',
         rawOutput:
-          '{"category":"billing","overview":"Customer reports a duplicate charge.","suggestedAction":"Check invoice history and refund if confirmed."}',
+          '{"category":"billing","priority":"high","overview":"Customer reports a duplicate charge.","suggestedAction":"Check invoice history and refund if confirmed."}',
         parsedOutput: {
           category: 'billing',
+          priority: 'high',
           overview: 'Customer reports a duplicate charge.',
           suggestedAction: 'Check invoice history and refund if confirmed.',
         },
@@ -97,6 +101,7 @@ describe('TicketService', () => {
       expect.stringMatching(/^TicketContentCache:/),
       expect.objectContaining({
         category: 'billing',
+        priority: 'high',
         cacheHit: false,
         promptVersion: TICKET_ANALYSIS_PROMPT_VERSION,
       }),
@@ -104,6 +109,7 @@ describe('TicketService', () => {
     );
     expect(response).toMatchObject({
       category: 'billing',
+      priority: 'high',
       cacheHit: false,
       modelName: 'glm-test',
       promptVersion: TICKET_ANALYSIS_PROMPT_VERSION,
@@ -116,9 +122,10 @@ describe('TicketService', () => {
     const llmService = {
       generateJsonOutputWithRaw: jest.fn().mockResolvedValueOnce({
         rawOutput:
-          '{"category":"technical","overview":"Customer reports an API timeout.","suggestedAction":"Check service logs and recent incidents."}',
+          '{"category":"technical","priority":"high","overview":"Customer reports an API timeout.","suggestedAction":"Check service logs and recent incidents."}',
         parsedOutput: {
           category: 'technical',
+          priority: 'high',
           overview: 'Customer reports an API timeout.',
           suggestedAction: 'Check service logs and recent incidents.',
         },
@@ -157,18 +164,21 @@ describe('TicketService', () => {
       generateJsonOutputWithRaw: jest
         .fn()
         .mockResolvedValueOnce({
-          rawOutput: '{"category":"sales","overview":"Pricing question","suggestedAction":"Route"}',
+          rawOutput:
+            '{"category":"sales","priority":"low","overview":"Pricing question","suggestedAction":"Route"}',
           parsedOutput: {
             category: 'sales',
+            priority: 'low',
             overview: 'Pricing question',
             suggestedAction: 'Route',
           },
         })
         .mockResolvedValueOnce({
           rawOutput:
-            '{"category":"unknown","overview":"Cannot classify","suggestedAction":"Review"}',
+            '{"category":"unknown","priority":"medium","overview":"Cannot classify","suggestedAction":"Review"}',
           parsedOutput: {
             category: 'unknown',
+            priority: 'medium',
             overview: 'Cannot classify',
             suggestedAction: 'Review',
           },
@@ -193,9 +203,11 @@ describe('TicketService', () => {
     expect(ticketAnalysisModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'error',
-        rawOutput: '{"category":"unknown","overview":"Cannot classify","suggestedAction":"Review"}',
+        rawOutput:
+          '{"category":"unknown","priority":"medium","overview":"Cannot classify","suggestedAction":"Review"}',
         parsedOutput: {
           category: 'unknown',
+          priority: 'medium',
           overview: 'Cannot classify',
           suggestedAction: 'Review',
         },
@@ -226,6 +238,7 @@ describe('TicketService', () => {
       id: 'cached-ticket-id',
       content: 'I cannot sign in.',
       category: 'account',
+      priority: 'medium',
       overview: 'Customer cannot sign in.',
       suggestedAction: 'Check account recovery settings.',
       status: 'analyzed',
@@ -249,6 +262,7 @@ describe('TicketService', () => {
     await expect(service.analyzeTicket({ content: 'I cannot sign in.' })).resolves.toMatchObject({
       id: 'cached-ticket-id',
       category: 'account',
+      priority: 'medium',
       cacheHit: true,
       promptVersion: TICKET_ANALYSIS_PROMPT_VERSION,
       status: 'analyzed',
@@ -273,12 +287,14 @@ describe('TicketService', () => {
           id: '507f1f77bcf86cd799439011',
           content: 'I cannot sign in.',
           category: 'account',
+          priority: 'medium',
           overview: 'Customer cannot access the account.',
           suggestedAction: 'Check account recovery settings.',
           rawOutput:
-            '{"category":"account","overview":"Customer cannot access the account.","suggestedAction":"Check account recovery settings."}',
+            '{"category":"account","priority":"medium","overview":"Customer cannot access the account.","suggestedAction":"Check account recovery settings."}',
           parsedOutput: {
             category: 'account',
+            priority: 'medium',
             overview: 'Customer cannot access the account.',
             suggestedAction: 'Check account recovery settings.',
           },
@@ -304,6 +320,7 @@ describe('TicketService', () => {
     await expect(service.getTicketAnalysis('507f1f77bcf86cd799439011')).resolves.toMatchObject({
       id: '507f1f77bcf86cd799439011',
       category: 'account',
+      priority: 'medium',
       modelName: 'glm-test',
       promptVersion: TICKET_ANALYSIS_PROMPT_VERSION,
       latencyMs: 321,

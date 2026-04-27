@@ -164,6 +164,7 @@ LLM 输出被限制为以下字段：
 ```json
 {
   "category": "billing | technical | account | complaint | other",
+  "priority": "low | medium | high | urgent",
   "overview": "Brief summary of the customer issue.",
   "suggestedAction": "Recommended next support action."
 }
@@ -182,6 +183,18 @@ npm run docker:down
 ```
 
 测试样例在 `apps/ai-ticket-classifier/test-data/ticket-cases.json`，当前包含 20 条覆盖 `billing / technical / account / complaint / other` 的工单分类样例。
+
+## Ticket Eval
+
+正式 eval case 在 `evals/ticket-cases.json`，每条包含 `input` 和期望的 `category` / `priority`。
+
+运行：
+
+```bash
+npm run eval:ticket
+```
+
+脚本会对比 `ticket-analysis-v1` 和 `ticket-analysis-v2`，输出准确率、失败 case、平均耗时，并把每个 prompt version 的详细评测结果写入 `docs/prompt-stability-few-shot-eval.md`。
 
 ## 环境变量
 

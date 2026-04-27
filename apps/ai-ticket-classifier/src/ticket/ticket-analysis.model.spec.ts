@@ -27,7 +27,7 @@ describe('TicketAnalysisMongoSchema', () => {
     });
 
     await expect(ticket.validate()).rejects.toThrow(
-      'Analyzed ticket analysis requires category, overview, suggestedAction, and analyzedAt.',
+      'Analyzed ticket analysis requires category, priority, overview, suggestedAction, and analyzedAt.',
     );
   });
 
@@ -45,12 +45,14 @@ describe('TicketAnalysisMongoSchema', () => {
     const ticket = new TicketAnalysisTestModel({
       content: 'I was charged twice.',
       category: 'billing',
+      priority: 'high',
       overview: 'Customer reports a duplicate subscription charge.',
       suggestedAction: 'Verify billing history and refund duplicate charge if confirmed.',
       rawOutput:
-        '{"category":"billing","overview":"Customer reports a duplicate subscription charge.","suggestedAction":"Verify billing history and refund duplicate charge if confirmed."}',
+        '{"category":"billing","priority":"high","overview":"Customer reports a duplicate subscription charge.","suggestedAction":"Verify billing history and refund duplicate charge if confirmed."}',
       parsedOutput: {
         category: 'billing',
+        priority: 'high',
         overview: 'Customer reports a duplicate subscription charge.',
         suggestedAction: 'Verify billing history and refund duplicate charge if confirmed.',
       },
@@ -65,7 +67,7 @@ describe('TicketAnalysisMongoSchema', () => {
 
     await expect(ticket.validate()).resolves.toBeUndefined();
     expect(ticket.rawOutput).toContain('"category":"billing"');
-    expect(ticket.parsedOutput).toMatchObject({ category: 'billing' });
+    expect(ticket.parsedOutput).toMatchObject({ category: 'billing', priority: 'high' });
     expect(ticket.retryCount).toBe(1);
     expect(ticket.promptVersion).toBe('ticket-analysis-v1');
     expect(ticket.modelName).toBe('glm-test');
@@ -76,6 +78,7 @@ describe('TicketAnalysisMongoSchema', () => {
     const ticket = new TicketAnalysisTestModel({
       content: 'I was charged twice.',
       category: 'billing',
+      priority: 'high',
       overview: 'Customer reports a duplicate subscription charge.',
       suggestedAction: 'Verify billing history and refund duplicate charge if confirmed.',
       status: 'analyzed',

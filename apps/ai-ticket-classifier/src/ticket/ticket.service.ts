@@ -34,6 +34,7 @@ export interface TicketAnalysisResponse {
   id?: string;
   content: string;
   category?: string;
+  priority?: string;
   overview?: string;
   suggestedAction?: string;
   rawOutput?: string;
@@ -193,6 +194,7 @@ export class TicketService {
       id: record.id,
       content: record.content,
       category: record.category,
+      priority: record.priority,
       overview: record.overview,
       suggestedAction: record.suggestedAction,
       rawOutput: record.rawOutput,

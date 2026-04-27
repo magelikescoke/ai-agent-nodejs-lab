@@ -13,29 +13,32 @@ import {
 
 interface TicketCase {
   id: string;
-  content: string;
-  expectedCategory: string;
+  input: string;
+  expected: {
+    category: string;
+    priority: string;
+  };
 }
 
 interface EvalResult {
   promptVersion: string;
   caseId: string;
   expectedCategory: string;
+  expectedPriority: string;
   userPrompt: string;
   rawOutput: string;
   parsedOutput: unknown;
   schemaPassed: boolean;
   categoryMatched: boolean;
+  priorityMatched: boolean;
+  passed: boolean;
   error?: string;
   latencyMs: number;
 }
 
 const repoRoot = path.resolve(__dirname, '../../..');
 const reportPath = path.join(repoRoot, 'docs/prompt-stability-few-shot-eval.md');
-const ticketCasesPath = path.join(
-  repoRoot,
-  'apps/ai-ticket-classifier/test-data/ticket-cases.json',
-);
+const ticketCasesPath = path.join(repoRoot, 'evals/ticket-cases.json');
 
 loadEnvFile(path.join(repoRoot, '.env'));
 loadEnvFile(path.join(repoRoot, 'apps/ai-ticket-classifier/.env'));
@@ -57,7 +60,7 @@ const client = new OpenAI({
 
 async function main() {
   const cases = JSON.parse(fs.readFileSync(ticketCasesPath, 'utf8')) as TicketCase[];
-  const evalCases = cases.slice(0, 10);
+  const evalCases = cases;
   const promptVersions = ['ticket-analysis-v1', 'ticket-analysis-v2'];
   const results: EvalResult[] = [];
 
@@ -81,11 +84,12 @@ async function main() {
   );
 
   console.log(`Wrote ${reportPath}`);
+  console.log(renderConsoleSummary(promptVersions, results));
 }
 
 async function runCase(prompt: TicketAnalysisPrompt, ticketCase: TicketCase): Promise<EvalResult> {
   const startedAt = Date.now();
-  const userPrompt = prompt.buildUserPrompt(ticketCase.content, 0);
+  const userPrompt = prompt.buildUserPrompt(ticketCase.input, 0);
   let rawOutput = '';
 
   try {
@@ -107,29 +111,38 @@ async function runCase(prompt: TicketAnalysisPrompt, ticketCase: TicketCase): Pr
     rawOutput = response.choices[0]?.message.content ?? '';
     const parsedOutput = JSON.parse(rawOutput) as TicketAnalysis;
     const validationResult = TicketAnalysisSchema.safeParse(parsedOutput);
+    const categoryMatched =
+      validationResult.success && validationResult.data.category === ticketCase.expected.category;
+    const priorityMatched =
+      validationResult.success && validationResult.data.priority === ticketCase.expected.priority;
 
     return {
       promptVersion: prompt.version,
       caseId: ticketCase.id,
-      expectedCategory: ticketCase.expectedCategory,
+      expectedCategory: ticketCase.expected.category,
+      expectedPriority: ticketCase.expected.priority,
       userPrompt,
       rawOutput,
       parsedOutput,
       schemaPassed: validationResult.success,
-      categoryMatched:
-        validationResult.success && validationResult.data.category === ticketCase.expectedCategory,
+      categoryMatched,
+      priorityMatched,
+      passed: validationResult.success && categoryMatched && priorityMatched,
       latencyMs: Date.now() - startedAt,
     };
   } catch (error) {
     return {
       promptVersion: prompt.version,
       caseId: ticketCase.id,
-      expectedCategory: ticketCase.expectedCategory,
+      expectedCategory: ticketCase.expected.category,
+      expectedPriority: ticketCase.expected.priority,
       userPrompt,
       rawOutput,
       parsedOutput: undefined,
       schemaPassed: false,
       categoryMatched: false,
+      priorityMatched: false,
+      passed: false,
       error: error instanceof Error ? error.message : 'Unknown eval error',
       latencyMs: Date.now() - startedAt,
     };
@@ -152,14 +165,14 @@ function renderReport(input: {
     '',
     '## Scope',
     '',
-    '- No few-shot: `ticket-analysis-v1`, 10 ticket cases.',
-    '- With few-shot: `ticket-analysis-v2`, the same 10 ticket cases.',
-    '- Output validation: strict ticket analysis schema plus expected category match.',
+    `- No few-shot: \`ticket-analysis-v1\`, ${input.cases.length} ticket cases.`,
+    `- With few-shot: \`ticket-analysis-v2\`, the same ${input.cases.length} ticket cases.`,
+    '- Output validation: strict ticket analysis schema plus expected category and priority match.',
     '',
     '## Summary',
     '',
-    '| Prompt version | Schema pass | Category match | Avg latency |',
-    '| --- | ---: | ---: | ---: |',
+    '| Prompt version | Accuracy | Schema pass | Category match | Priority match | Avg latency |',
+    '| --- | ---: | ---: | ---: | ---: | ---: |',
     ...input.prompts.map((prompt) => renderSummaryRow(prompt.version, input.results)),
     '',
     '## Original Prompts',
@@ -179,11 +192,44 @@ function renderReport(input: {
     );
   }
 
-  lines.push('## Test Cases', '', '| Case | Expected category | Content |', '| --- | --- | --- |');
+  lines.push(
+    '## Test Cases',
+    '',
+    '| Case | Expected category | Expected priority | Input |',
+    '| --- | --- | --- | --- |',
+  );
   for (const ticketCase of input.cases) {
     lines.push(
-      `| ${ticketCase.id} | ${ticketCase.expectedCategory} | ${escapeTableCell(ticketCase.content)} |`,
+      `| ${ticketCase.id} | ${ticketCase.expected.category} | ${ticketCase.expected.priority} | ${escapeTableCell(ticketCase.input)} |`,
     );
+  }
+
+  lines.push('', '## Failed Cases', '');
+  for (const prompt of input.prompts) {
+    const failedResults = input.results.filter(
+      (result) => result.promptVersion === prompt.version && !result.passed,
+    );
+
+    lines.push(`### ${prompt.version}`, '');
+    if (failedResults.length === 0) {
+      lines.push('No failed cases.', '');
+      continue;
+    }
+
+    lines.push(
+      '| Case | Expected | Actual | Schema | Latency |',
+      '| --- | --- | --- | ---: | ---: |',
+    );
+    for (const result of failedResults) {
+      const parsedOutput = TicketAnalysisSchema.safeParse(result.parsedOutput);
+      const actual = parsedOutput.success
+        ? `${parsedOutput.data.category} / ${parsedOutput.data.priority}`
+        : 'schema failed';
+      lines.push(
+        `| ${result.caseId} | ${result.expectedCategory} / ${result.expectedPriority} | ${actual} | ${String(result.schemaPassed)} | ${result.latencyMs}ms |`,
+      );
+    }
+    lines.push('');
   }
 
   lines.push('', '## Raw Results', '');
@@ -191,9 +237,10 @@ function renderReport(input: {
     lines.push(
       `### ${result.promptVersion} / ${result.caseId}`,
       '',
-      `Expected category: ${result.expectedCategory}`,
+      `Expected: ${result.expectedCategory} / ${result.expectedPriority}`,
       `Schema passed: ${String(result.schemaPassed)}`,
       `Category matched: ${String(result.categoryMatched)}`,
+      `Priority matched: ${String(result.priorityMatched)}`,
       `Latency: ${result.latencyMs}ms`,
       '',
       'User prompt:',
@@ -216,11 +263,40 @@ function renderSummaryRow(promptVersion: string, results: EvalResult[]): string 
   const promptResults = results.filter((result) => result.promptVersion === promptVersion);
   const schemaPassCount = promptResults.filter((result) => result.schemaPassed).length;
   const categoryMatchCount = promptResults.filter((result) => result.categoryMatched).length;
+  const priorityMatchCount = promptResults.filter((result) => result.priorityMatched).length;
+  const passCount = promptResults.filter((result) => result.passed).length;
+  const accuracy = Math.round((passCount / promptResults.length) * 100);
   const avgLatency = Math.round(
     promptResults.reduce((sum, result) => sum + result.latencyMs, 0) / promptResults.length,
   );
 
-  return `| ${promptVersion} | ${schemaPassCount}/${promptResults.length} | ${categoryMatchCount}/${promptResults.length} | ${avgLatency}ms |`;
+  return `| ${promptVersion} | ${accuracy}% (${passCount}/${promptResults.length}) | ${schemaPassCount}/${promptResults.length} | ${categoryMatchCount}/${promptResults.length} | ${priorityMatchCount}/${promptResults.length} | ${avgLatency}ms |`;
+}
+
+function renderConsoleSummary(promptVersions: string[], results: EvalResult[]): string {
+  const lines = ['Ticket eval summary:'];
+
+  for (const promptVersion of promptVersions) {
+    const promptResults = results.filter((result) => result.promptVersion === promptVersion);
+    const passCount = promptResults.filter((result) => result.passed).length;
+    const failedResults = promptResults.filter((result) => !result.passed);
+    const accuracy = Math.round((passCount / promptResults.length) * 100);
+    const avgLatency = Math.round(
+      promptResults.reduce((sum, result) => sum + result.latencyMs, 0) / promptResults.length,
+    );
+
+    lines.push(
+      `${promptVersion}: accuracy ${accuracy}% (${passCount}/${promptResults.length}), failed ${failedResults.length}, avg latency ${avgLatency}ms`,
+    );
+
+    for (const result of failedResults) {
+      lines.push(
+        `- ${result.caseId}: expected ${result.expectedCategory}/${result.expectedPriority}, schema=${String(result.schemaPassed)}, category=${String(result.categoryMatched)}, priority=${String(result.priorityMatched)}`,
+      );
+    }
+  }
+
+  return lines.join('\n');
 }
 
 function escapeTableCell(value: string): string {

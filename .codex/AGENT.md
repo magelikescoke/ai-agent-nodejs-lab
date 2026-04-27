@@ -29,6 +29,9 @@ Rules:
 - Do not end the subject with a period.
 - Add a scope when it clarifies ownership, for example `feat(ai-ticket-classifier): add health endpoint`.
 - Use a body when the reason, tradeoff, or migration detail is not obvious from the subject.
+- Do not bypass the user's GPG signing configuration for commits.
+- All commits must use the configured GPG signature.
+- If GPG signing fails or requires permission, ask the user for authorization instead of disabling signing.
 
 Examples:
 

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "ticket-001",
+    "input": "I was charged twice for the same monthly subscription and need a refund.",
+    "expected": {
+      "category": "billing",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-002",
+    "input": "The dashboard keeps returning a 500 error when I open the reports page.",
+    "expected": {
+      "category": "technical",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-003",
+    "input": "I cannot reset my password because the verification email never arrives.",
+    "expected": {
+      "category": "account",
+      "priority": "medium"
+    }
+  },
+  {
+    "id": "ticket-004",
+    "input": "Your support team closed my issue without solving it and I am very unhappy.",
+    "expected": {
+      "category": "complaint",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-005",
+    "input": "Can you tell me whether you support annual plans for nonprofits?",
+    "expected": {
+      "category": "other",
+      "priority": "low"
+    }
+  },
+  {
+    "id": "ticket-006",
+    "input": "My invoice shows the wrong company tax ID and billing address.",
+    "expected": {
+      "category": "billing",
+      "priority": "medium"
+    }
+  },
+  {
+    "id": "ticket-007",
+    "input": "File uploads fail whenever the CSV is larger than 10 MB.",
+    "expected": {
+      "category": "technical",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-008",
+    "input": "Please change the owner email on our workspace admin account.",
+    "expected": {
+      "category": "account",
+      "priority": "medium"
+    }
+  },
+  {
+    "id": "ticket-009",
+    "input": "The last agent was rude and ignored the details I sent three times.",
+    "expected": {
+      "category": "complaint",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-010",
+    "input": "Where can I find your data processing agreement and security questionnaire?",
+    "expected": {
+      "category": "other",
+      "priority": "low"
+    }
+  },
+  {
+    "id": "ticket-011",
+    "input": "The payment page keeps spinning after I enter my card details.",
+    "expected": {
+      "category": "billing",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-012",
+    "input": "Our webhook endpoint stopped receiving delivery events after yesterday's deployment.",
+    "expected": {
+      "category": "technical",
+      "priority": "urgent"
+    }
+  },
+  {
+    "id": "ticket-013",
+    "input": "I need to disable two-factor authentication because I lost my authenticator device.",
+    "expected": {
+      "category": "account",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-014",
+    "input": "I have contacted support four times and nobody has fixed the problem.",
+    "expected": {
+      "category": "complaint",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-015",
+    "input": "Do you have a public roadmap for upcoming integrations?",
+    "expected": {
+      "category": "other",
+      "priority": "low"
+    }
+  },
+  {
+    "id": "ticket-016",
+    "input": "Please cancel my subscription and confirm that I will not be charged next month.",
+    "expected": {
+      "category": "billing",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-017",
+    "input": "The API returns 429 even though we are below the documented rate limit.",
+    "expected": {
+      "category": "technical",
+      "priority": "high"
+    }
+  },
+  {
+    "id": "ticket-018",
+    "input": "A former employee still has admin access to our organization.",
+    "expected": {
+      "category": "account",
+      "priority": "urgent"
+    }
+  },
+  {
+    "id": "ticket-019",
+    "input": "Your product lost our saved report and this is unacceptable for our team.",
+    "expected": {
+      "category": "complaint",
+      "priority": "urgent"
+    }
+  },
+  {
+    "id": "ticket-020",
+    "input": "Can you share your standard vendor onboarding form and support hours?",
+    "expected": {
+      "category": "other",
+      "priority": "low"
+    }
+  }
+]

@@ -4,12 +4,14 @@ describe('TicketAnalysisSchema', () => {
   it('accepts the LLM ticket analysis output', () => {
     const result = TicketAnalysisSchema.parse({
       category: 'billing',
+      priority: 'high',
       overview: 'Customer reports a duplicate subscription charge.',
       suggestedAction: 'Verify invoice history and refund duplicate charge if confirmed.',
     });
 
     expect(result).toEqual({
       category: 'billing',
+      priority: 'high',
       overview: 'Customer reports a duplicate subscription charge.',
       suggestedAction: 'Verify invoice history and refund duplicate charge if confirmed.',
     });
@@ -19,6 +21,7 @@ describe('TicketAnalysisSchema', () => {
     expect(() =>
       TicketAnalysisSchema.parse({
         category: 'sales',
+        priority: 'medium',
         overview: 'Customer asks about pricing.',
         suggestedAction: 'Route to billing support.',
       }),
@@ -39,6 +42,7 @@ describe('TicketAnalysisSchema', () => {
       TicketAnalysisSchema.parse({
         content: 'I cannot sign in.',
         category: 'technical',
+        priority: 'high',
         overview: 'Customer cannot sign in.',
         suggestedAction: 'Check account authentication logs.',
         status: 'analyzed',
@@ -57,7 +61,7 @@ describe('TicketAnalysisResponseFormat', () => {
         schema: {
           type: 'object',
           additionalProperties: false,
-          required: ['category', 'overview', 'suggestedAction'],
+          required: ['category', 'priority', 'overview', 'suggestedAction'],
         },
       },
     });

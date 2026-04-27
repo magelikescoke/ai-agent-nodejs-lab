@@ -188,12 +188,12 @@
 
 ### Day 9：结果评测 v1
 
-- [ ] 建立 `evals/ticket-cases.json`
-- [ ] 每条 case 包含 input 和 expected category / priority
-- [ ] 写 `npm run eval:ticket`
-- [ ] 输出准确率、失败 case、平均耗时
-- [ ] 记录每个 prompt version 的评测结果
-- [ ] README 增加 eval 使用方式
+- [x] 建立 `evals/ticket-cases.json`
+- [x] 每条 case 包含 input 和 expected category / priority
+- [x] 写 `npm run eval:ticket`
+- [x] 输出准确率、失败 case、平均耗时
+- [x] 记录每个 prompt version 的评测结果
+- [x] README 增加 eval 使用方式
 - [ ] Python 30 分钟：用 Python 统计 eval 结果
 
 验收：改 prompt 后可以跑回归测试。

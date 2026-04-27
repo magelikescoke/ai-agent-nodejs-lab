@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "test": "npm run test --workspaces --if-present",
+    "eval:ticket": "ts-node apps/ai-ticket-classifier/scripts/run-prompt-stability-eval.ts",
     "test:watch": "npm run test:watch --workspace apps/ai-ticket-classifier",
     "start:dev": "npm run start:dev --workspace apps/ai-ticket-classifier",
     "docker:up": "docker compose up -d",

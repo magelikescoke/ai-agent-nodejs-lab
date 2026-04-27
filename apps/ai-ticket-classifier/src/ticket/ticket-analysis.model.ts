@@ -3,8 +3,10 @@ import { HydratedDocument } from 'mongoose';
 import { hasText } from '../common/utils';
 import {
   TicketAnalysisCategories,
+  TicketAnalysisPriorities,
   TicketAnalysisStatuses,
   type TicketAnalysisCategory,
+  type TicketAnalysisPriority,
   type TicketAnalysisStatus,
 } from './ticket-analysis.schema';
 
@@ -22,6 +24,9 @@ export class TicketAnalysisRecord {
 
   @Prop({ type: String, enum: TicketAnalysisCategories })
   category?: TicketAnalysisCategory;
+
+  @Prop({ type: String, enum: TicketAnalysisPriorities })
+  priority?: TicketAnalysisPriority;
 
   @Prop({ type: String, trim: true })
   overview?: string;
@@ -73,18 +78,20 @@ export const TicketAnalysisMongoSchema = SchemaFactory.createForClass(TicketAnal
 
 TicketAnalysisMongoSchema.index({ status: 1, createdAt: -1 });
 TicketAnalysisMongoSchema.index({ category: 1, createdAt: -1 });
+TicketAnalysisMongoSchema.index({ priority: 1, createdAt: -1 });
 TicketAnalysisMongoSchema.index({ content: 'text', overview: 'text' });
 
 TicketAnalysisMongoSchema.pre<TicketAnalysisDocument>('validate', function validateStatusFields() {
   if (this.status === 'analyzed') {
     if (
       !this.category ||
+      !this.priority ||
       !hasText(this.overview) ||
       !hasText(this.suggestedAction) ||
       !this.analyzedAt
     ) {
       throw new Error(
-        'Analyzed ticket analysis requires category, overview, suggestedAction, and analyzedAt.',
+        'Analyzed ticket analysis requires category, priority, overview, suggestedAction, and analyzedAt.',
       );
     }
   }
