@@ -1,16 +1,15 @@
-# AI Agent Node.js Lab
+# AI Ticket Classifier
 
-AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 Node.js/NestJS 项目。当前应用 `ai-ticket-classifier` 是一个 AI 工单分类与结构化输出系统，用来演示 LLM API 接入、结构化 JSON 输出、Zod 校验、MongoDB 持久化、Redis 缓存、BullMQ 批量任务和基础评测样例。
+AI Ticket Classifier 是一个基于 NestJS 的 LLM 工单分析后端，把非结构化客服工单稳定转成可存储、可查询、可评测的结构化 JSON。项目覆盖 LLM API 接入、JSON Schema + Zod 双层校验、Prompt 版本评测、Redis 缓存、MongoDB 持久化、BullMQ 异步任务、SSE 流式事件、Docker 一键启动和 GitHub Actions CI。
 
-## Week 1 MVP
+## 项目亮点
 
-- `POST /tickets/analyze`：同步分析单条工单，返回受控 JSON。
-- `POST /tickets/batch-analyze`：批量提交工单，每条工单进入 BullMQ job。
-- `GET /tickets/:id`：查询 MongoDB 中的分析记录。
-- `GET /jobs/:id`：查询 BullMQ job 状态、进度、失败原因和结果。
-- LLM 输出使用 JSON Schema + Zod 双层约束，校验失败自动 retry 1 次。
-- 相同工单内容使用 SHA-256 做缓存 key，命中 Redis 后跳过 LLM 调用。
-- API 层有简单 IP rate limit，Worker 层通过 BullMQ 控制并发和频率。
+- 稳定结构化输出：使用 OpenAI-compatible `response_format` 约束模型输出，再用 Zod strict schema 做服务端白名单校验。
+- 生产化请求链路：同步分析、批量异步分析、BullMQ worker、Redis 缓存、MongoDB 审计记录都已打通。
+- 流式体验：`GET /tickets/analyze/stream` 使用 SSE 推送 `AgentEvent`，前端可实时展示 received、analyzing、token、validating、completed、error。
+- 安全与防注入：输入长度限制、ticket content 隔离、prompt injection 测试、异常输出 fallback。
+- 可回归评测：内置 20 条 eval case，对比 prompt v1/v2 的 schema pass、分类准确率、优先级准确率和延迟。
+- 工程交付：Docker Compose 一键启动 app、MongoDB、Redis；GitHub Actions 自动执行 lint/test。
 
 ## 技术栈
 
@@ -49,22 +48,27 @@ AI Agent Node.js Lab 是一个用于学习和实验 AI Agent 后端工程化的 
 └── tsconfig.json
 ```
 
-## 架构
+## 架构图
 
 ```mermaid
-flowchart LR
-  Client[Client] --> API[NestJS API]
-  API --> RateLimit[API Rate Limit]
-  RateLimit --> Cache{Redis Cache}
-  Cache -- hit --> API
-  Cache -- miss --> Queue[BullMQ Queue]
-  Queue --> Worker[Ticket Worker]
-  Worker --> LLM[LLM Provider]
-  LLM --> Schema[JSON Schema + Zod]
-  Schema --> Mongo[(MongoDB)]
-  Schema --> Cache
-  Mongo --> API
-  Queue --> JobStatus[GET /jobs/:id]
+flowchart TD
+  Client[Client / Frontend] --> API[NestJS API]
+  API --> Guard[Validation + Rate Limit]
+  Guard --> Cache{Redis Content Cache}
+  Cache -- hit --> Response[API Response]
+  Cache -- miss, sync --> LLM[OpenAI-compatible LLM]
+  Cache -- miss, batch --> Queue[BullMQ Queue]
+  Queue --> Worker[TicketAnalysisProcessor]
+  Worker --> LLM
+  LLM --> Format[JSON Schema response_format]
+  Format --> Validate[Zod Strict Validation]
+  Validate -- pass --> Mongo[(MongoDB ticket_analyses)]
+  Validate -- fail --> Retry[Retry once / Error fallback]
+  Retry --> Mongo
+  Mongo --> Cache
+  Mongo --> Response
+  API --> SSE[SSE AgentEvent Stream]
+  Queue --> JobAPI[GET /jobs/:id]
 ```
 
 ## 运行方式
@@ -143,18 +147,18 @@ curl http://localhost:3000/tickets/507f1f77bcf86cd799439011
 
 分析记录会保存请求内容、原始模型输出、解析后的结构化输出、模型名、耗时、重试次数和处理状态。
 
-## API
+## 接口文档
 
-| Method | Path                     | 说明                       |
-| ------ | ------------------------ | -------------------------- |
-| `GET`  | `/health`                | 服务健康检查               |
-| `GET`  | `/llm/health`            | LLM Provider 健康检查      |
-| `POST` | `/llm/generate/text`     | 调试用文本生成接口         |
-| `POST` | `/tickets/analyze`       | 同步分析单条工单           |
-| `GET`  | `/tickets/analyze/stream` | SSE 流式分析单条工单       |
-| `GET`  | `/tickets/:id`           | 查询工单分析记录           |
-| `POST` | `/tickets/batch-analyze` | 批量提交异步分析任务       |
-| `GET`  | `/jobs/:id`              | 查询异步任务状态与处理结果 |
+| Method | Path                      | Request                       | Response / Event                     | 说明                       |
+| ------ | ------------------------- | ----------------------------- | ------------------------------------ | -------------------------- |
+| `GET`  | `/health`                 | 无                            | 服务名、版本、状态                   | 服务健康检查               |
+| `GET`  | `/llm/health`             | 无                            | provider 状态、耗时、错误信息        | LLM Provider 健康检查      |
+| `POST` | `/llm/generate/text`      | `{ "prompt": "..." }`         | LLM 文本结果                         | 调试用文本生成接口         |
+| `POST` | `/tickets/analyze`        | `{ "content": "..." }`        | `TicketAnalysisResponse`             | 同步分析单条工单           |
+| `GET`  | `/tickets/analyze/stream` | query: `content=...`          | SSE `AgentEvent<T>`                  | 流式分析单条工单           |
+| `GET`  | `/tickets/:id`            | path: Mongo ObjectId          | `TicketAnalysisResponse`             | 查询工单分析记录           |
+| `POST` | `/tickets/batch-analyze`  | `{ "tickets": [{content}] }`  | batchId、jobIds                      | 批量提交异步分析任务       |
+| `GET`  | `/jobs/:id`               | path: BullMQ job id           | job 状态、进度、失败原因、处理结果   | 查询异步任务状态与处理结果 |
 
 批量异步分析：
 
@@ -267,6 +271,35 @@ npm run eval:ticket
 ```
 
 脚本会对比 `ticket-analysis-v1` 和 `ticket-analysis-v2`，输出准确率、失败 case、平均耗时，并把每个 prompt version 的详细评测结果写入 `docs/prompt-stability-few-shot-eval.md`。
+
+当前评测结果示例：
+
+| Prompt version | Accuracy | Schema pass | Category match | Priority match | Avg latency |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `ticket-analysis-v1` | 0% (0/20) | 0/20 | 0/20 | 0/20 | 1100ms |
+| `ticket-analysis-v2` | 55% (11/20) | 20/20 | 19/20 | 12/20 | 1236ms |
+
+这个结果说明：仅靠“返回 JSON”的 prompt 不稳定；加入 few-shot、优先级规则和严格 schema 后，schema pass 从 0/20 提升到 20/20，但 priority 判断仍有优化空间。
+
+## 生产化考虑
+
+- 幂等性：批量任务当前用 batchId + index 生成 jobId，后续可引入客户端 `Idempotency-Key` 或请求 hash，避免重复提交产生重复 job。
+- 可观测性：分析记录已保存 rawOutput、parsedOutput、promptVersion、modelName、latencyMs、retryCount，可继续接入 traceId、结构化日志和指标面板。
+- 成本控制：内容 hash + Redis cache 已减少重复 LLM 调用，后续可加入 token 统计、请求预算和 provider fallback。
+- 安全边界：已加入输入长度、prompt injection 隔离、schema 白名单和异常 fallback；生产环境还应增加认证、租户隔离、敏感信息脱敏和审计日志。
+- 可靠性：BullMQ 承担异步批量任务，后续可细化 dead-letter queue、重试退避、worker 水位监控和优雅停机。
+- 部署：Docker Compose 覆盖本地完整依赖，CI 覆盖 lint/test；生产部署可拆分 API/worker 镜像并使用托管 MongoDB/Redis。
+
+## 简历项目描述
+
+AI 工单分类与结构化输出系统：基于 NestJS/TypeScript 构建 LLM 应用后端，将客服工单自动分类为受控 JSON，并支持同步分析、批量异步任务和 SSE 流式状态推送。使用 OpenAI-compatible response_format + Zod strict schema 实现模型输出白名单校验，结合 prompt versioning、20 条 eval case 和 few-shot 对比评估输出稳定性；通过 Redis 内容缓存降低重复 LLM 调用，MongoDB 持久化 raw/parsed output、耗时、模型名和重试次数，BullMQ 控制批量任务并发。补充 prompt injection 防护、异常 fallback、Docker Compose 一键启动和 GitHub Actions lint/test，体现从 demo 到可上线后端服务的工程化能力。
+
+## 延伸文档
+
+- [LLM 应用为什么必须做结构化输出和评测](docs/llm-structured-output-and-eval.md)
+- [Week 2 Ticket Classifier 面试问答](docs/week2-ticket-classifier-interview-qa.md)
+- [Week 3 Enterprise RAG Agent 需求文档](docs/week3-enterprise-rag-agent-requirements.md)
+- [Backlog](docs/backlog.md)
 
 ## 环境变量
 
