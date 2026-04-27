@@ -119,6 +119,7 @@ curl http://localhost:3000/tickets/507f1f77bcf86cd799439011
 | `GET`  | `/llm/health`            | LLM Provider 健康检查      |
 | `POST` | `/llm/generate/text`     | 调试用文本生成接口         |
 | `POST` | `/tickets/analyze`       | 同步分析单条工单           |
+| `GET`  | `/tickets/analyze/stream` | SSE 流式分析单条工单       |
 | `GET`  | `/tickets/:id`           | 查询工单分析记录           |
 | `POST` | `/tickets/batch-analyze` | 批量提交异步分析任务       |
 | `GET`  | `/jobs/:id`              | 查询异步任务状态与处理结果 |
@@ -138,6 +139,24 @@ curl http://localhost:3000/jobs/31d7e4df-bd20-4109-8857-f198f522f3a3-0
 ```
 
 批量分析会把每条工单提交为一个 BullMQ job，由 worker 控制 LLM 分析并发和频率。
+
+流式分析：
+
+```bash
+curl -N -G 'http://localhost:3000/tickets/analyze/stream' \
+  --data-urlencode 'content=The dashboard keeps returning a 500 error when I open the reports page.'
+```
+
+SSE 事件协议：
+
+| Event                  | 说明                         |
+| ---------------------- | ---------------------------- |
+| `analysis.received`    | 服务端已接收分析请求         |
+| `analysis.analyzing`   | 开始调用 LLM 分析            |
+| `llm.token`            | LLM token 增量，格式为 `{"delta":"..."}` |
+| `analysis.validating`  | 开始解析并校验完整模型输出   |
+| `analysis.completed`   | 分析流程结束                 |
+| `error`                | 分析失败，格式为 `{"message":"..."}` |
 
 批量任务流程：
 

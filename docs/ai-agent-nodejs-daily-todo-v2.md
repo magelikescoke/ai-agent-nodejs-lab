@@ -200,12 +200,12 @@
 
 ### Day 10：流式响应与 SSE / WebSocket 预研
 
-- [ ] 实现 SSE 或 WebSocket 的基础连接
-- [ ] 分析请求时推送状态：received / analyzing / validating / completed
-- [ ] 如果模型支持 streaming，尝试透传 token 流
-- [ ] 记录前端可消费的事件格式
+- [x] 实现 SSE 或 WebSocket 的基础连接
+- [x] 分析请求时推送状态：received / analyzing / validating / completed
+- [x] 如果模型支持 streaming，尝试透传 token 流
+- [x] 记录前端可消费的事件格式
 - [ ] 设计 Agent 执行事件标准：`AgentEvent`
-- [ ] README 增加事件协议
+- [x] README 增加事件协议
 - [ ] Python 30 分钟：学习 generator 概念
 
 验收：客户端能实时看到分析状态。

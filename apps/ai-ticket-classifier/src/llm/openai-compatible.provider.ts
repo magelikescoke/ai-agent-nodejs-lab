@@ -1,5 +1,10 @@
 import OpenAI from 'openai';
-import { LLMBaseProvider, type LLMJsonOutput, type LLMResponseFormat } from './llm.base-provider';
+import {
+  LLMBaseProvider,
+  type LLMJsonOutput,
+  type LLMResponseFormat,
+  type LLMTextStream,
+} from './llm.base-provider';
 
 export interface OpenAiCompatibleProviderConfig {
   apiKey: string;
@@ -84,5 +89,26 @@ export abstract class OpenAiCompatibleProvider extends LLMBaseProvider {
     }
 
     throw new Error(`LLM JSON output failed with finish_reason=${choice?.finish_reason ?? 'none'}`);
+  }
+
+  public async generateTextWithStream(
+    systemPrompt: string,
+    userPrompt: string,
+    format: LLMResponseFormat,
+  ): Promise<LLMTextStream> {
+    const client = this.getClient();
+    return client.chat.completions.create({
+      model: this.getDefaultModelName(),
+      temperature: 0.1,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        { role: 'user', content: userPrompt },
+      ],
+      response_format: format,
+      stream: true,
+    });
   }
 }

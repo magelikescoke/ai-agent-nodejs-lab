@@ -135,6 +135,106 @@ export class TicketService {
     }
   }
 
+  public async analyzeTicketStream(
+    dto: AnalyzeTicketDto,
+    callbacks: {
+      onReceived: () => void;
+      onToken: (chunk: string) => void;
+      onAnalyzing: () => void;
+      onValidating: () => void;
+      onDone: () => void;
+      onError: (error: unknown) => void;
+    },
+  ) {
+    const content = dto.content;
+    const prompt = this.getConfiguredTicketAnalysisPrompt();
+    callbacks.onReceived();
+    const cached = await this.getTicketFromCache(content, prompt.version);
+
+    if (cached) {
+      callbacks.onToken(JSON.stringify({
+        ...cached,
+        cacheHit: true,
+      }));
+      callbacks.onDone()
+      return;
+    }
+    const startedAt = Date.now();
+    const modelName = this.llmService.getDefaultModelName();
+
+    callbacks.onAnalyzing()
+    const record = await this.ticketAnalysisModel.create({
+      content,
+      promptVersion: prompt.version,
+      modelName,
+      status: 'submitted',
+      submittedAt: new Date(startedAt),
+    }).catch(e => {
+      callbacks.onError(e)
+      throw e;
+    });
+   try {
+    const rawOutputChunks: string[] = [];
+    const stream = await this.llmService.generateTextWithStream(
+      prompt.systemPrompt,
+      prompt.buildUserPrompt(content, 0),
+      TicketAnalysisResponseFormat,
+    );
+    for await (const chunk of stream) {
+      const token = chunk.choices[0]?.delta?.content;
+
+      if (token) {
+        rawOutputChunks.push(token)
+        callbacks.onToken(token);
+      }
+    }
+    const latencyMs = Date.now() - startedAt;
+    const analyzedAt = new Date();
+      callbacks.onValidating()
+    const rawOutput = rawOutputChunks.join('')
+    const parsedOutput = JSON.parse(rawOutput)
+    const parseRes = TicketAnalysisSchema.safeParse(parsedOutput)
+    if (parseRes.success) {
+      const newRecord = await this.ticketAnalysisModel.findByIdAndUpdate(record._id, {
+        $set: {
+          status: 'analyzed',
+          ...parseRes.data,
+          latencyMs,
+          rawOutput,
+          parsedOutput,
+          analyzedAt,
+        }
+      }, {
+        returnDocument: 'after'
+      })
+      if (newRecord) {
+        const response = this.serializeTicketAnalysisRecord(newRecord);
+        await this.setTicketCache(content, prompt.version, response);
+      }
+    } else {
+      throw new TicketAnalysisValidationError(
+        'LLM ticket analysis output failed schema validation',
+        rawOutput,
+        parsedOutput,
+        0,
+      );
+    }
+   } catch(e) {
+    await this.ticketAnalysisModel.findByIdAndUpdate(record._id, {
+      $set: {
+        status: 'error',
+        errorMsg: (e as any)?.message,
+        rawOutput: e instanceof TicketAnalysisValidationError ? e.rawOutput : undefined,
+        parsedOutput:
+          e instanceof TicketAnalysisValidationError ? e.parsedOutput : undefined,
+      }
+    })
+    callbacks.onError(e)
+    return
+   }
+    callbacks.onDone();
+  }
+
   async getTicketAnalysis(id: string) {
     const record = await this.ticketAnalysisModel.findById(id).exec();
 
