@@ -69,16 +69,48 @@ flowchart LR
 
 ## 运行方式
 
+一键 Docker 启动 app、MongoDB 和 Redis：
+
+```bash
+./scripts/start-local.sh
+```
+
+也可以使用 npm script：
+
+```bash
+npm run start:local
+```
+
+脚本会在缺少 `apps/ai-ticket-classifier/.env` 时从 `.env.example` 复制一份，然后执行 `docker compose up --build -d`。Docker Compose 默认读取 `.env.example` 并在容器内覆盖 MongoDB/Redis 连接地址；如果要调用真实 LLM，请先在 `.env.example` 或部署环境变量里配置 `GLM_API_KEY`。启动后访问：
+
+```bash
+curl http://localhost:3000/health
+```
+
+停止服务：
+
+```bash
+npm run docker:down
+```
+
+本地开发启动：
+
 安装依赖：
 
 ```bash
 npm install
 ```
 
-启动 MongoDB 和 Redis：
+启动完整 Docker 服务：
 
 ```bash
 npm run docker:up
+```
+
+如果只想启动依赖服务，不启动 app 容器：
+
+```bash
+docker compose up -d mongodb redis
 ```
 
 启动 NestJS 开发服务：
@@ -218,6 +250,7 @@ npm run build
 npm run lint
 npm run format
 npm run test
+npm run docker:up
 npm run docker:down
 ```
 

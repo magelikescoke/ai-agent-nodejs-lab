@@ -224,12 +224,12 @@
 
 ### Day 12：Docker 化与 CI
 
-- [ ] 完善 Dockerfile
-- [ ] 完善 docker-compose：app、mongo、redis
-- [ ] 增加 `.env.example`
-- [ ] 增加 GitHub Actions：lint、test
-- [ ] 补充启动文档
-- [ ] 写一键启动脚本
+- [x] 完善 Dockerfile
+- [x] 完善 docker-compose：app、mongo、redis
+- [x] 增加 `.env.example`
+- [x] 增加 GitHub Actions：lint、test
+- [x] 补充启动文档
+- [x] 写一键启动脚本
 - [ ] Python 30 分钟：学习 requests，调用本地 API
 
 验收：新机器按 README 能 10 分钟内跑通。
