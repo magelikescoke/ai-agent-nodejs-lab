@@ -204,7 +204,7 @@
 - [x] 分析请求时推送状态：received / analyzing / validating / completed
 - [x] 如果模型支持 streaming，尝试透传 token 流
 - [x] 记录前端可消费的事件格式
-- [ ] 设计 Agent 执行事件标准：`AgentEvent`
+- [x] 设计 Agent 执行事件标准：`AgentEvent`
 - [x] README 增加事件协议
 - [ ] Python 30 分钟：学习 generator 概念
 

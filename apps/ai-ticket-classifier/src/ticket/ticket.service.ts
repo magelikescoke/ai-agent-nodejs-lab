@@ -5,6 +5,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { Cache } from 'cache-manager';
 import { Model } from 'mongoose';
 import { ZodError } from 'zod';
+import {
+  AgentEventTypes,
+  createAgentEvent,
+  type AgentEvent,
+} from '../common/events/agent-event';
 import { sha256Hex } from '../common/utils';
 import type { AppConfiguration } from '../config/app.config';
 import { LLMService } from '../llm/llm.service';
@@ -28,6 +33,10 @@ interface ValidatedTicketAnalysis {
   rawOutput: string;
   parsedOutput: TicketAnalysis;
   retryCount: number;
+}
+
+interface TicketAnalysisStreamCallbacks {
+  onEvent: (event: AgentEvent) => void;
 }
 
 export interface TicketAnalysisResponse {
@@ -137,102 +146,108 @@ export class TicketService {
 
   public async analyzeTicketStream(
     dto: AnalyzeTicketDto,
-    callbacks: {
-      onReceived: () => void;
-      onToken: (chunk: string) => void;
-      onAnalyzing: () => void;
-      onValidating: () => void;
-      onDone: () => void;
-      onError: (error: unknown) => void;
-    },
+    callbacks: TicketAnalysisStreamCallbacks,
   ) {
     const content = dto.content;
     const prompt = this.getConfiguredTicketAnalysisPrompt();
-    callbacks.onReceived();
+    this.emitAgentEvent(callbacks, AgentEventTypes.AnalysisReceived);
     const cached = await this.getTicketFromCache(content, prompt.version);
 
     if (cached) {
-      callbacks.onToken(JSON.stringify({
-        ...cached,
-        cacheHit: true,
-      }));
-      callbacks.onDone()
+      this.emitAgentEvent(callbacks, AgentEventTypes.LlmToken, {
+        delta: JSON.stringify({
+          ...cached,
+          cacheHit: true,
+        }),
+      });
+      this.emitAgentEvent(callbacks, AgentEventTypes.AnalysisCompleted);
       return;
     }
+
     const startedAt = Date.now();
     const modelName = this.llmService.getDefaultModelName();
 
-    callbacks.onAnalyzing()
+    this.emitAgentEvent(callbacks, AgentEventTypes.AnalysisAnalyzing);
     const record = await this.ticketAnalysisModel.create({
       content,
       promptVersion: prompt.version,
       modelName,
       status: 'submitted',
       submittedAt: new Date(startedAt),
-    }).catch(e => {
-      callbacks.onError(e)
-      throw e;
     });
-   try {
-    const rawOutputChunks: string[] = [];
-    const stream = await this.llmService.generateTextWithStream(
-      prompt.systemPrompt,
-      prompt.buildUserPrompt(content, 0),
-      TicketAnalysisResponseFormat,
-    );
-    for await (const chunk of stream) {
-      const token = chunk.choices[0]?.delta?.content;
 
-      if (token) {
-        rawOutputChunks.push(token)
-        callbacks.onToken(token);
+    try {
+      const rawOutputChunks: string[] = [];
+      const stream = await this.llmService.generateTextWithStream(
+        prompt.systemPrompt,
+        prompt.buildUserPrompt(content, 0),
+        TicketAnalysisResponseFormat,
+      );
+
+      for await (const chunk of stream) {
+        const token = chunk.choices[0]?.delta?.content;
+
+        if (token) {
+          rawOutputChunks.push(token);
+          this.emitAgentEvent(callbacks, AgentEventTypes.LlmToken, { delta: token });
+        }
       }
-    }
-    const latencyMs = Date.now() - startedAt;
-    const analyzedAt = new Date();
-      callbacks.onValidating()
-    const rawOutput = rawOutputChunks.join('')
-    const parsedOutput = JSON.parse(rawOutput)
-    const parseRes = TicketAnalysisSchema.safeParse(parsedOutput)
-    if (parseRes.success) {
-      const newRecord = await this.ticketAnalysisModel.findByIdAndUpdate(record._id, {
-        $set: {
-          status: 'analyzed',
-          ...parseRes.data,
-          latencyMs,
+
+      const latencyMs = Date.now() - startedAt;
+      const analyzedAt = new Date();
+      const rawOutput = rawOutputChunks.join('');
+      const parsedOutput = JSON.parse(rawOutput) as unknown;
+      const parseRes = TicketAnalysisSchema.safeParse(parsedOutput);
+
+      this.emitAgentEvent(callbacks, AgentEventTypes.AnalysisValidating);
+
+      if (!parseRes.success) {
+        throw new TicketAnalysisValidationError(
+          'LLM ticket analysis output failed schema validation',
           rawOutput,
           parsedOutput,
-          analyzedAt,
-        }
-      }, {
-        returnDocument: 'after'
-      })
+          0,
+        );
+      }
+
+      const newRecord = await this.ticketAnalysisModel.findByIdAndUpdate(
+        record._id,
+        {
+          $set: {
+            status: 'analyzed',
+            ...parseRes.data,
+            latencyMs,
+            rawOutput,
+            parsedOutput,
+            analyzedAt,
+          },
+        },
+        {
+          returnDocument: 'after',
+        },
+      );
+
       if (newRecord) {
         const response = this.serializeTicketAnalysisRecord(newRecord);
         await this.setTicketCache(content, prompt.version, response);
       }
-    } else {
-      throw new TicketAnalysisValidationError(
-        'LLM ticket analysis output failed schema validation',
-        rawOutput,
-        parsedOutput,
-        0,
-      );
+    } catch (error) {
+      await this.ticketAnalysisModel.findByIdAndUpdate(record._id, {
+        $set: {
+          status: 'error',
+          errorMsg: this.getErrorMessage(error),
+          rawOutput: error instanceof TicketAnalysisValidationError ? error.rawOutput : undefined,
+          parsedOutput:
+            error instanceof TicketAnalysisValidationError ? error.parsedOutput : undefined,
+        },
+      });
+      this.emitAgentEvent(callbacks, AgentEventTypes.Error, {
+        message: this.getErrorMessage(error),
+      });
+      return;
     }
-   } catch(e) {
-    await this.ticketAnalysisModel.findByIdAndUpdate(record._id, {
-      $set: {
-        status: 'error',
-        errorMsg: (e as any)?.message,
-        rawOutput: e instanceof TicketAnalysisValidationError ? e.rawOutput : undefined,
-        parsedOutput:
-          e instanceof TicketAnalysisValidationError ? e.parsedOutput : undefined,
-      }
-    })
-    callbacks.onError(e)
-    return
-   }
-    callbacks.onDone();
+
+    this.emitAgentEvent(callbacks, AgentEventTypes.AnalysisCompleted);
   }
 
   async getTicketAnalysis(id: string) {
@@ -316,6 +331,18 @@ export class TicketService {
   private getContentCacheKey(content: string, promptVersion: string): string {
     const hash = sha256Hex(content);
     return `TicketContentCache:${promptVersion}:${hash}`;
+  }
+
+  private emitAgentEvent<T>(
+    callbacks: TicketAnalysisStreamCallbacks,
+    type: AgentEvent['type'],
+    data?: T,
+  ): void {
+    callbacks.onEvent(createAgentEvent(type, data));
+  }
+
+  private getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : 'Ticket analysis failed';
   }
 
   private async getTicketFromCache(content: string, promptVersion: string) {

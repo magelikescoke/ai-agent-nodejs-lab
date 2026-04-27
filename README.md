@@ -149,14 +149,24 @@ curl -N -G 'http://localhost:3000/tickets/analyze/stream' \
 
 SSE 事件协议：
 
+每条 SSE 的 `event` 等于 `AgentEvent.type`，`data` 是完整的 `AgentEvent` JSON：
+
+```ts
+interface AgentEvent<T = unknown> {
+  type: AgentEventType;
+  timestamp: string;
+  data?: T;
+}
+```
+
 | Event                  | 说明                         |
 | ---------------------- | ---------------------------- |
 | `analysis.received`    | 服务端已接收分析请求         |
 | `analysis.analyzing`   | 开始调用 LLM 分析            |
-| `llm.token`            | LLM token 增量，格式为 `{"delta":"..."}` |
+| `llm.token`            | LLM token 增量，`data` 为 `{"delta":"..."}` |
 | `analysis.validating`  | 开始解析并校验完整模型输出   |
 | `analysis.completed`   | 分析流程结束                 |
-| `error`                | 分析失败，格式为 `{"message":"..."}` |
+| `error`                | 分析失败，`data` 为 `{"message":"..."}` |
 
 批量任务流程：
 
