@@ -39,6 +39,9 @@ export class TicketAnalysisRecord {
   retryCount!: number;
 
   @Prop({ type: String, trim: true })
+  promptVersion?: string;
+
+  @Prop({ type: String, trim: true })
   modelName?: string;
 
   @Prop({ type: Number, min: 0 })
@@ -91,10 +94,15 @@ TicketAnalysisMongoSchema.pre<TicketAnalysisDocument>('validate', function valid
   }
 
   if ((this.status === 'analyzed' || this.status === 'error') && !hasAnalysisMetadata(this)) {
-    throw new Error('Completed ticket analysis requires modelName and latencyMs.');
+    throw new Error('Completed ticket analysis requires modelName, promptVersion, and latencyMs.');
   }
 });
 
 function hasAnalysisMetadata(record: TicketAnalysisDocument): boolean {
-  return hasText(record.modelName) && typeof record.latencyMs === 'number' && record.latencyMs >= 0;
+  return (
+    hasText(record.modelName) &&
+    hasText(record.promptVersion) &&
+    typeof record.latencyMs === 'number' &&
+    record.latencyMs >= 0
+  );
 }

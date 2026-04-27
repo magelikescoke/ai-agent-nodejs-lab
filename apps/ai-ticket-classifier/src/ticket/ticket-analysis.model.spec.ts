@@ -55,6 +55,7 @@ describe('TicketAnalysisMongoSchema', () => {
         suggestedAction: 'Verify billing history and refund duplicate charge if confirmed.',
       },
       retryCount: 1,
+      promptVersion: 'ticket-analysis-v1',
       modelName: 'glm-test',
       latencyMs: 428,
       status: 'analyzed',
@@ -66,6 +67,7 @@ describe('TicketAnalysisMongoSchema', () => {
     expect(ticket.rawOutput).toContain('"category":"billing"');
     expect(ticket.parsedOutput).toMatchObject({ category: 'billing' });
     expect(ticket.retryCount).toBe(1);
+    expect(ticket.promptVersion).toBe('ticket-analysis-v1');
     expect(ticket.modelName).toBe('glm-test');
     expect(ticket.latencyMs).toBe(428);
   });
@@ -82,7 +84,7 @@ describe('TicketAnalysisMongoSchema', () => {
     });
 
     await expect(ticket.validate()).rejects.toThrow(
-      'Completed ticket analysis requires modelName and latencyMs.',
+      'Completed ticket analysis requires modelName, promptVersion, and latencyMs.',
     );
   });
 });

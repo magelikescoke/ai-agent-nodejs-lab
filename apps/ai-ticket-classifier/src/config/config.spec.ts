@@ -16,11 +16,21 @@ describe('configuration', () => {
     delete process.env.PORT;
     delete process.env.MONGODB_URI;
     delete process.env.REDIS_URL;
+    delete process.env.TICKET_ANALYSIS_PROMPT_VERSION;
 
     expect(appConfig()).toMatchObject({
       nodeEnv: 'test',
       port: 3000,
       redisUrl: 'redis://localhost:6379',
+      ticketAnalysisPromptVersion: 'ticket-analysis-v1',
+    });
+  });
+
+  it('loads ticket prompt version from environment variables', () => {
+    process.env.TICKET_ANALYSIS_PROMPT_VERSION = 'ticket-analysis-v2';
+
+    expect(appConfig()).toMatchObject({
+      ticketAnalysisPromptVersion: 'ticket-analysis-v2',
     });
   });
 

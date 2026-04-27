@@ -1,31 +1,27 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Cache } from 'cache-manager';
 import { Model } from 'mongoose';
 import { ZodError } from 'zod';
 import { sha256Hex } from '../common/utils';
+import type { AppConfiguration } from '../config/app.config';
 import { LLMService } from '../llm/llm.service';
+import {
+  getTicketAnalysisPrompt,
+  type TicketAnalysisPrompt,
+} from '../prompts/ticket-analysis.prompts';
 import { AnalyzeTicketDto } from './dto/analyze-ticket.dto';
 import { TicketAnalysisMongoModelName, TicketAnalysisRecord } from './ticket-analysis.model';
 import {
   TicketAnalysis,
-  TicketAnalysisCategories,
   TicketAnalysisResponseFormat,
   TicketAnalysisSchema,
 } from './ticket-analysis.schema';
 
 const TICKET_ANALYSIS_MAX_ATTEMPTS = 2;
 const TICKET_ANALYSIS_CACHE_TTL_MS = 10 * 60 * 1000;
-
-const TICKET_ANALYSIS_SYSTEM_PROMPT = [
-  'You are a support ticket triage assistant.',
-  'Analyze the user ticket and return JSON only.',
-  `Classify the ticket into exactly one allowed category. Categories: [${TicketAnalysisCategories.join(',')}]`,
-  'Keep overview and suggestedAction concise.',
-  'Answer with a JSON string, Allowed fields: [category,overview,suggestedAction],',
-  'Example: {"category":"billing","overview":"User has doubt about details of billing.","suggestedAction":"Check the amount of billing."}',
-].join(' ');
 
 interface ValidatedTicketAnalysis {
   analysis: TicketAnalysis;
@@ -45,6 +41,7 @@ export interface TicketAnalysisResponse {
   status: string;
   errorMsg?: string;
   retryCount: number;
+  promptVersion?: string;
   modelName?: string;
   latencyMs?: number;
   cacheHit: boolean;
@@ -73,11 +70,13 @@ export class TicketService {
     private readonly ticketAnalysisModel: Model<TicketAnalysisRecord>,
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
+    private readonly configService: ConfigService,
   ) {}
 
   async analyzeTicket(dto: AnalyzeTicketDto) {
     const content = dto.content;
-    const cached = await this.getTicketFromCache(content);
+    const prompt = this.getConfiguredTicketAnalysisPrompt();
+    const cached = await this.getTicketFromCache(content, prompt.version);
 
     if (cached) {
       return {
@@ -91,7 +90,7 @@ export class TicketService {
 
     try {
       const { analysis, rawOutput, parsedOutput, retryCount } =
-        await this.generateValidatedAnalysis(content);
+        await this.generateValidatedAnalysis(content, prompt);
       const analyzedAt = new Date();
       const latencyMs = Date.now() - startedAt;
 
@@ -101,6 +100,7 @@ export class TicketService {
         rawOutput,
         parsedOutput,
         retryCount,
+        promptVersion: prompt.version,
         modelName,
         latencyMs,
         status: 'analyzed',
@@ -109,7 +109,7 @@ export class TicketService {
       });
 
       const response = this.serializeTicketAnalysisRecord(record);
-      await this.setTicketCache(content, response);
+      await this.setTicketCache(content, prompt.version, response);
 
       return response;
     } catch (error) {
@@ -124,6 +124,7 @@ export class TicketService {
         parsedOutput:
           error instanceof TicketAnalysisValidationError ? error.parsedOutput : undefined,
         retryCount: error instanceof TicketAnalysisValidationError ? error.retryCount : 0,
+        promptVersion: prompt.version,
         modelName,
         latencyMs,
         submittedAt: new Date(startedAt),
@@ -143,15 +144,18 @@ export class TicketService {
     return this.serializeTicketAnalysisRecord(record);
   }
 
-  private async generateValidatedAnalysis(content: string): Promise<ValidatedTicketAnalysis> {
+  private async generateValidatedAnalysis(
+    content: string,
+    prompt: TicketAnalysisPrompt,
+  ): Promise<ValidatedTicketAnalysis> {
     let lastRawOutput: string | undefined;
     let lastParsedOutput: unknown;
     let lastValidationError: ZodError | undefined;
 
     for (let attemptIndex = 0; attemptIndex < TICKET_ANALYSIS_MAX_ATTEMPTS; attemptIndex += 1) {
       const output = await this.llmService.generateJsonOutputWithRaw<unknown>(
-        TICKET_ANALYSIS_SYSTEM_PROMPT,
-        this.getTicketAnalysisUserPrompt(content, attemptIndex),
+        prompt.systemPrompt,
+        prompt.buildUserPrompt(content, attemptIndex),
         TicketAnalysisResponseFormat,
       );
 
@@ -179,16 +183,9 @@ export class TicketService {
     );
   }
 
-  private getTicketAnalysisUserPrompt(content: string, attemptIndex: number): string {
-    if (attemptIndex === 0) {
-      return content;
-    }
-
-    return [
-      'The previous output failed schema validation.',
-      'Retry once and return only a JSON object matching the required schema.',
-      `Ticket content: ${content}`,
-    ].join('\n');
+  private getConfiguredTicketAnalysisPrompt(): TicketAnalysisPrompt {
+    const appConfiguration = this.configService.getOrThrow<AppConfiguration>('app');
+    return getTicketAnalysisPrompt(appConfiguration.ticketAnalysisPromptVersion);
   }
 
   private serializeTicketAnalysisRecord(record: TicketAnalysisRecord & { id?: string }) {
@@ -203,6 +200,7 @@ export class TicketService {
       status: record.status,
       errorMsg: record.errorMsg,
       retryCount: record.retryCount,
+      promptVersion: record.promptVersion,
       modelName: record.modelName,
       latencyMs: record.latencyMs,
       cacheHit: false,
@@ -213,18 +211,22 @@ export class TicketService {
     } satisfies TicketAnalysisResponse;
   }
 
-  private getContentCacheKey(content: string): string {
+  private getContentCacheKey(content: string, promptVersion: string): string {
     const hash = sha256Hex(content);
-    return `TicketContentCache:${hash}`;
+    return `TicketContentCache:${promptVersion}:${hash}`;
   }
 
-  private async getTicketFromCache(content: string) {
-    const key = this.getContentCacheKey(content);
+  private async getTicketFromCache(content: string, promptVersion: string) {
+    const key = this.getContentCacheKey(content, promptVersion);
     return this.cacheManager.get<TicketAnalysisResponse>(key);
   }
 
-  private async setTicketCache(content: string, response: TicketAnalysisResponse): Promise<void> {
-    const key = this.getContentCacheKey(content);
+  private async setTicketCache(
+    content: string,
+    promptVersion: string,
+    response: TicketAnalysisResponse,
+  ): Promise<void> {
+    const key = this.getContentCacheKey(content, promptVersion);
     await this.cacheManager.set(key, response, TICKET_ANALYSIS_CACHE_TTL_MS);
   }
 }

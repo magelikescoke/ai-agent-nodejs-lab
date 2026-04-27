@@ -22,6 +22,8 @@ Allowed common types:
 
 Rules:
 
+- Before running `git commit`, inspect recent commits when needed and choose a message that matches this repository's Conventional Commits style.
+- Do not use free-form commit subjects such as `Add prompt versioning and few-shot eval`; rewrite them as standard messages like `feat(ai-ticket-classifier): add prompt versioning and few-shot eval`.
 - Use lowercase `type`.
 - Keep `subject` concise and imperative.
 - Do not end the subject with a period.
