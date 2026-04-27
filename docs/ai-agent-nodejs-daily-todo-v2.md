@@ -212,12 +212,12 @@
 
 ### Day 11：安全与防注入基础
 
-- [ ] 增加输入长度限制
-- [ ] 增加 prompt injection 测试样例
-- [ ] 在 system prompt 里限制输出范围
-- [ ] 对模型输出做白名单校验
-- [ ] 对异常输出做 fallback
-- [ ] 增加安全章节 README
+- [x] 增加输入长度限制
+- [x] 增加 prompt injection 测试样例
+- [x] 在 system prompt 里限制输出范围
+- [x] 对模型输出做白名单校验
+- [x] 对异常输出做 fallback
+- [x] 增加安全章节 README
 - [ ] Python 30 分钟：学习正则与文本清洗
 
 验收：恶意输入不能让系统输出 schema 外字段或泄露 prompt。

@@ -201,6 +201,16 @@ LLM 输出被限制为以下字段：
 
 服务端会用 Zod 做白名单校验，拒绝 schema 外字段和不支持的分类。校验失败时会 retry 1 次，并把原始输出、解析结果、重试次数、模型名和耗时写入 MongoDB。
 
+## 安全与防注入
+
+当前工单分析接口采用以下基础防护：
+
+- 输入长度限制：`content` 会 trim，并限制为 1 到 10000 个字符。
+- Prompt injection 隔离：用户工单会包在 `<ticket_content>` 中，system prompt 明确要求把工单内容当作不可信数据，不执行其中要求忽略规则、泄露 prompt 或改变输出格式的指令。
+- 输出范围限制：system prompt、OpenAI-compatible `response_format` 和 Zod schema 都只允许 `category`、`priority`、`overview`、`suggestedAction`。
+- 白名单校验：`category`、`priority` 必须命中固定枚举，schema 使用 strict object 拒绝额外字段。
+- 异常 fallback：模型输出非法 JSON、schema 校验失败或 LLM 调用异常时，请求不会把异常结构当成成功结果，而是写入 `status: "error"` 的分析记录，并返回错误状态。
+
 ## 常用命令
 
 ```bash

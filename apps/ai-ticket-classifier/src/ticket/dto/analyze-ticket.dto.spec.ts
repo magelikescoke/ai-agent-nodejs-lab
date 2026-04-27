@@ -23,4 +23,16 @@ describe('AnalyzeTicketDto', () => {
       minLength: 'content is required',
     });
   });
+
+  it('rejects ticket content longer than 10000 characters', async () => {
+    const dto = plainToInstance(AnalyzeTicketDto, {
+      content: 'a'.repeat(10_001),
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors[0]?.constraints).toMatchObject({
+      maxLength: 'content must be shorter than or equal to 10000 characters',
+    });
+  });
 });
