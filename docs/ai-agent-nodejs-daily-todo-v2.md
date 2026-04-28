@@ -265,23 +265,23 @@
 
 ### Day 15：RAG 项目初始化
 
-- [ ] 新建 `apps/enterprise-rag-agent`
+- [x] 新建 `apps/enterprise-rag-agent`
 - [ ] 设计模块：Document / Ingestion / Embedding / Retrieval / Chat
-- [ ] 配置 PostgreSQL + pgvector 或 Qdrant
-- [ ] Docker Compose 增加向量库
-- [ ] 设计文档元数据 schema
-- [ ] README 写 RAG 系统目标
+- [x] 配置 PostgreSQL + pgvector 或 Qdrant
+- [x] Docker Compose 增加向量库
+- [x] 设计文档元数据 schema
+- [x] README 写 RAG 系统目标
 - [ ] Python 30 分钟：学习 numpy 基础概念
 
 验收：RAG 服务启动，数据库可连接。
 
 ### Day 16：文件上传与文档存储
 
-- [ ] 实现 `POST /documents/upload`
-- [ ] 支持 txt / md，PDF 可先预留
-- [ ] 保存文件元数据到 MongoDB 或 PostgreSQL
-- [ ] 文件本体存本地目录或 MinIO
-- [ ] 上传后创建 BullMQ ingestion job
+- [x] 实现 `POST /documents/upload`
+- [x] 支持 txt / md，PDF 可先预留
+- [x] 保存文件元数据到 MongoDB 或 PostgreSQL
+- [x] 文件本体存本地目录或 MinIO
+- [x] 上传后创建 BullMQ ingestion job
 - [ ] 实现 `GET /documents/:id`
 - [ ] Python 30 分钟：读取文本文件并切分
 

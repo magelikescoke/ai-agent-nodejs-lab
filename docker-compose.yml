@@ -60,6 +60,17 @@ services:
       timeout: 5s
       retries: 5
 
+  qdrant:
+    image: qdrant/qdrant:v1.13.4
+    container_name: ai-agent-nodejs-lab-qdrant
+    restart: unless-stopped
+    ports:
+      - '6333:6333'
+      - '6334:6334'
+    volumes:
+      - qdrant_data:/qdrant/storage
+
 volumes:
   mongodb_data:
   redis_data:
+  qdrant_data:

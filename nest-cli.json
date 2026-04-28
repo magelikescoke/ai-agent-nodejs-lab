@@ -17,6 +17,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/ai-ticket-classifier/tsconfig.app.json"
       }
+    },
+    "enterprise-rag-agent": {
+      "type": "application",
+      "root": "apps/enterprise-rag-agent",
+      "entryFile": "main",
+      "sourceRoot": "apps/enterprise-rag-agent/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/enterprise-rag-agent/tsconfig.app.json"
+      }
     }
   }
 }

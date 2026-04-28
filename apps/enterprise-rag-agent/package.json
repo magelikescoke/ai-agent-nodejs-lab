@@ -1,0 +1,28 @@
+{
+  "name": "enterprise-rag-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NestJS service for enterprise document ingestion and RAG workflows.",
+  "scripts": {
+    "build": "cd ../.. && nest build enterprise-rag-agent",
+    "start": "node ../../dist/apps/enterprise-rag-agent/main.js",
+    "start:dev": "cd ../.. && nest start enterprise-rag-agent --watch",
+    "start:debug": "cd ../.. && nest start enterprise-rag-agent --debug --watch",
+    "test": "jest --config jest.config.ts",
+    "test:watch": "jest --config jest.config.ts --watch",
+    "test:cov": "jest --config jest.config.ts --coverage"
+  },
+  "dependencies": {
+    "@langchain/textsplitters": "^1.0.1",
+    "@nestjs/bullmq": "^11.0.4",
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/mongoose": "^11.0.4",
+    "@nestjs/platform-express": "^11.1.0",
+    "bullmq": "^5.76.2",
+    "mongoose": "^9.5.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  }
+}

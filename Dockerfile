@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY apps/ai-ticket-classifier/package.json apps/ai-ticket-classifier/package.json
+COPY apps/enterprise-rag-agent/package.json apps/enterprise-rag-agent/package.json
 
 RUN npm ci
 
@@ -21,6 +22,7 @@ ENV NODE_ENV=production
 
 COPY package.json package-lock.json ./
 COPY apps/ai-ticket-classifier/package.json apps/ai-ticket-classifier/package.json
+COPY apps/enterprise-rag-agent/package.json apps/enterprise-rag-agent/package.json
 
 RUN npm ci --omit=dev && npm cache clean --force
 
