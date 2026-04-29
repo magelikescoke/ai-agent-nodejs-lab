@@ -3,7 +3,9 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import type { DocumentService } from '../document/document.service';
 import { DocumentMetadata } from '../document/document.service';
+import { Chunk } from './chunk.model';
 import type { ChunkService } from './chunk.service';
+import { StoredChunk } from './chunk.service';
 import type { EmbeddingQueueService } from './embedding-queue.service';
 import { IngestionService } from './ingestion.service';
 
@@ -21,13 +23,14 @@ describe('IngestionService', () => {
       updateChunkCount: jest.fn(),
     };
     chunkService = {
-      replaceDocumentChunks: jest.fn((_: string, chunks: unknown[]) =>
-        Promise.resolve(
-          chunks.map((chunk, index) => ({
-            ...(chunk as object),
-            id: `chunk-${index}`,
-          })),
-        ),
+      replaceDocumentChunks: jest.fn(
+        (_: string, chunks: Chunk[]): Promise<StoredChunk[]> =>
+          Promise.resolve(
+            chunks.map((chunk, index) => ({
+              ...chunk,
+              id: `chunk-${index}`,
+            })),
+          ),
       ),
     };
     embeddingQueueService = {
@@ -56,25 +59,24 @@ describe('IngestionService', () => {
 
     await service.executeIngestionJob(document.id);
 
-    expect(chunkService.replaceDocumentChunks).toHaveBeenCalledWith(
-      document.id,
-      expect.arrayContaining([
-        expect.objectContaining({
-          documentId: document.id,
-          content: expect.stringContaining('Internal onboarding notes.'),
-          chunkIndex: 0,
-        }),
-      ]),
-    );
+    expect(chunkService.replaceDocumentChunks).toHaveBeenCalledTimes(1);
+    const [storedDocumentId, chunks] = chunkService.replaceDocumentChunks.mock.calls[0] as [
+      string,
+      Chunk[],
+    ];
+    expect(storedDocumentId).toBe(document.id);
+    expect(chunks[0]).toMatchObject({
+      documentId: document.id,
+      chunkIndex: 0,
+    });
+    expect(chunks[0].content).toContain('Internal onboarding notes.');
     expect(documentService.updateChunkCount).toHaveBeenCalledWith(document.id, 1);
-    expect(embeddingQueueService.enqueueChunks).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: 'chunk-0',
-          documentId: document.id,
-        }),
-      ]),
-    );
+    expect(embeddingQueueService.enqueueChunks).toHaveBeenCalledTimes(1);
+    const [enqueuedChunks] = embeddingQueueService.enqueueChunks.mock.calls[0] as [StoredChunk[]];
+    expect(enqueuedChunks[0]).toMatchObject({
+      id: 'chunk-0',
+      documentId: document.id,
+    });
   });
 
   it('routes PDF documents to the reserved PDF strategy', async () => {

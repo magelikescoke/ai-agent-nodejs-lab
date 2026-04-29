@@ -11,19 +11,17 @@ describe('QdrantVectorStoreService', () => {
 
   it('ensures the collection and upserts chunk vectors with retrieval payload', async () => {
     const fetchMock = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ result: { status: 'green' } }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-      });
-    global.fetch = fetchMock as unknown as typeof fetch;
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ result: { status: 'green' } }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
     const service = new QdrantVectorStoreService(createConfigService());
 
     await service.upsertChunkVector({
@@ -40,27 +38,22 @@ describe('QdrantVectorStoreService', () => {
     });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, 'http://localhost:6333/collections/rag_chunks');
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      'http://localhost:6333/collections/rag_chunks',
-      expect.objectContaining({
-        method: 'PUT',
-        body: JSON.stringify({
-          vectors: {
-            size: 1024,
-            distance: 'Cosine',
-          },
-        }),
+    const [collectionUrl, createCollectionRequest] = fetchMock.mock.calls[1];
+    expect(collectionUrl).toBe('http://localhost:6333/collections/rag_chunks');
+    expect(createCollectionRequest?.method).toBe('PUT');
+    expect(createCollectionRequest?.body).toBe(
+      JSON.stringify({
+        vectors: {
+          size: 1024,
+          distance: 'Cosine',
+        },
       }),
     );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
-      'http://localhost:6333/collections/rag_chunks/points?wait=true',
-      expect.objectContaining({
-        method: 'PUT',
-        body: expect.stringContaining('"chunkId":"chunk-id"'),
-      }),
-    );
+
+    const [pointsUrl, upsertRequest] = fetchMock.mock.calls[2];
+    expect(pointsUrl).toBe('http://localhost:6333/collections/rag_chunks/points?wait=true');
+    expect(upsertRequest?.method).toBe('PUT');
+    expect(upsertRequest?.body).toEqual(expect.stringContaining('"chunkId":"chunk-id"'));
   });
 
   function createConfigService(): ConfigService {

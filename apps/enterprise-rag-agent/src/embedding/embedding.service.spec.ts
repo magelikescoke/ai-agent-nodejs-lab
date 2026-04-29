@@ -10,16 +10,22 @@ describe('EmbeddingService', () => {
   });
 
   it('calls the configured embedding provider and maps vectors by index', async () => {
-    const fetchMock = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        data: [
-          { index: 1, object: 'embedding', embedding: [0.3, 0.4] },
-          { index: 0, object: 'embedding', embedding: [0.1, 0.2] },
-        ],
-      }),
-    });
-    global.fetch = fetchMock as unknown as typeof fetch;
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            { index: 1, object: 'embedding', embedding: [0.3, 0.4] },
+            { index: 0, object: 'embedding', embedding: [0.1, 0.2] },
+          ],
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      ),
+    );
     const service = new EmbeddingService(createConfigService());
 
     await expect(service.embedBatch(['first', 'second'])).resolves.toEqual([
@@ -34,19 +40,19 @@ describe('EmbeddingService', () => {
         dimensions: 1024,
       },
     ]);
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://open.bigmodel.cn/api/paas/v4/embeddings',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Authorization: 'Bearer test-key',
-          'Content-Type': 'application/json',
-        }),
-        body: JSON.stringify({
-          model: 'embedding-3',
-          input: ['first', 'second'],
-          dimensions: 1024,
-        }),
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, requestInit] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://open.bigmodel.cn/api/paas/v4/embeddings');
+    expect(requestInit?.method).toBe('POST');
+    expect(requestInit?.headers).toEqual({
+      Authorization: 'Bearer test-key',
+      'Content-Type': 'application/json',
+    });
+    expect(requestInit?.body).toBe(
+      JSON.stringify({
+        model: 'embedding-3',
+        input: ['first', 'second'],
+        dimensions: 1024,
       }),
     );
   });
