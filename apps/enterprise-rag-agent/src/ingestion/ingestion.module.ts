@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DocumentModule } from '../document/document.module';
+import { EmbeddingModule } from '../embedding/embedding.module';
 import { ChunkMongoModelName, ChunkMongoSchema } from './chunk.model';
 import { ChunkService } from './chunk.service';
 import { CHUNK_EMBEDDING_QUEUE_NAME } from './embedding-queue.constants';
@@ -14,6 +15,7 @@ import { IngestionService } from './ingestion.service';
 @Module({
   imports: [
     DocumentModule,
+    EmbeddingModule,
     IngestionQueueModule,
     BullModule.registerQueue({
       name: CHUNK_EMBEDDING_QUEUE_NAME,

@@ -164,7 +164,7 @@
 - [x] Review 代码，删除临时代码
 - [x] 打 tag：`week1-ticket-classifier-mvp`
 - [x] 整理 5 道面试题：structured output、retry、缓存、幂等、token 成本
-首先是用 Zod 在服务端进行字段校验。如果没有通过校验，我会去调整 Prompt，检查是否使用了结构化输出。
+      首先是用 Zod 在服务端进行字段校验。如果没有通过校验，我会去调整 Prompt，检查是否使用了结构化输出。
 
 验收：项目可以给别人 clone 后跑起来。
 
@@ -266,7 +266,7 @@
 ### Day 15：RAG 项目初始化
 
 - [x] 新建 `apps/enterprise-rag-agent`
-- [ ] 设计模块：Document / Ingestion / Embedding / Retrieval / Chat
+- [x] 设计模块：Document / Ingestion / Embedding / Retrieval / Chat
 - [x] 配置 PostgreSQL + pgvector 或 Qdrant
 - [x] Docker Compose 增加向量库
 - [x] 设计文档元数据 schema
@@ -289,23 +289,23 @@
 
 ### Day 17：Chunking 策略
 
-- [ ] 实现 recursive chunking
-- [ ] 支持 chunkSize 和 overlap 配置
-- [ ] 保存 chunk 元数据：documentId、index、content、token estimate
-- [ ] 写 chunk 单测
-- [ ] 准备 3 份测试文档：产品 FAQ、技术文档、运维 runbook
-- [ ] README 记录 chunk 策略选择
+- [x] 实现 recursive chunking
+- [x] 支持 chunkSize 和 overlap 配置
+- [x] 保存 chunk 元数据：documentId、index、content、token estimate
+- [x] 写 chunk 单测
+- [x] 准备 3 份测试文档：产品 FAQ、技术文档、运维 runbook
+- [x] README 记录 chunk 策略选择
 - [ ] Python 30 分钟：写一个 chunk 可视化脚本
 
 验收：文档能稳定切成 chunk，且可追溯来源。
 
 ### Day 18：Embedding 入库
 
-- [ ] 封装 `EmbeddingService`
-- [ ] 批量生成 embedding
-- [ ] 保存 vector 到 pgvector / Qdrant
-- [ ] 处理 embedding 失败重试
-- [ ] 记录 embedding model 和维度
+- [x] 封装 `EmbeddingService`
+- [x] 批量生成 embedding
+- [x] 保存 vector 到 pgvector / Qdrant
+- [x] 处理 embedding 失败重试
+- [x] 记录 embedding model 和维度
 - [ ] 增加 ingestion job 状态：pending / chunking / embedding / indexed / failed
 - [ ] Python 30 分钟：理解 cosine similarity
 

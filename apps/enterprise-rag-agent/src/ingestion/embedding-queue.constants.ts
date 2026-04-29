@@ -15,5 +15,7 @@ export interface ChunkEmbeddingJobResult {
   chunkId: string;
   documentId: string;
   chunkIndex: number;
-  status: 'mocked';
+  embeddingModel: string;
+  embeddingDimensions: number;
+  status: 'indexed';
 }
