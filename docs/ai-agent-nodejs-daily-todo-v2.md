@@ -313,12 +313,12 @@
 
 ### Day 19：检索 API v1
 
-- [ ] 实现 `POST /retrieval/search`
-- [ ] 输入 query，生成 query embedding
-- [ ] 返回 topK chunks
-- [ ] 返回 score、documentId、chunkIndex
-- [ ] 增加过滤条件：documentId、namespace
-- [ ] 写 10 个检索测试问题
+- [x] 实现 `POST /retrieval/search`
+- [x] 输入 query，生成 query embedding
+- [x] 返回 topK chunks
+- [x] 返回 score、documentId、chunkIndex
+- [x] 增加过滤条件：documentId、namespace
+- [x] 写 30 个检索测试问题
 - [ ] Python 30 分钟：手写 cosine similarity demo
 
 验收：输入问题能找回相关 chunk。

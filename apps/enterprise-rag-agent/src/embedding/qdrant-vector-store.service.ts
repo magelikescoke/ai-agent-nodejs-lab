@@ -16,10 +16,44 @@ export interface UpsertChunkVectorInput {
   embeddingDimensions: number;
 }
 
+export interface VectorSearchFilter {
+  documentId?: string;
+}
+
+export interface VectorSearchInput {
+  vector: number[];
+  topK: number;
+  filter?: VectorSearchFilter;
+}
+
+export interface VectorSearchResult {
+  chunkId: string;
+  documentId: string;
+  chunkIndex: number;
+  content: string;
+  score: number;
+  metadata: ChunkMetadata;
+}
+
 interface QdrantCollectionResponse {
   result?: {
     status?: string;
   };
+}
+
+interface QdrantSearchResponse {
+  result?: QdrantSearchPoint[];
+}
+
+interface QdrantSearchPoint {
+  score: number;
+  payload?: Partial<{
+    chunkId: string;
+    documentId: string;
+    chunkIndex: number;
+    content: string;
+    metadata: ChunkMetadata;
+  }>;
 }
 
 @Injectable()
@@ -60,6 +94,33 @@ export class QdrantVectorStoreService {
     if (!response.ok) {
       throw new BadGatewayException(`qdrant upsert returned ${response.status}`);
     }
+  }
+
+  public async searchChunks(input: VectorSearchInput): Promise<VectorSearchResult[]> {
+    const appConfig = this.configService.getOrThrow<AppConfiguration>('app');
+    const response = await fetch(
+      `${this.getQdrantUrl(appConfig)}/collections/${appConfig.qdrantCollectionName}/points/search`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vector: input.vector,
+          limit: input.topK,
+          with_payload: true,
+          filter: this.toQdrantFilter(input.filter),
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new BadGatewayException(`qdrant search returned ${response.status}`);
+    }
+
+    const body = (await response.json()) as QdrantSearchResponse;
+
+    return (body.result ?? []).map((point) => this.toVectorSearchResult(point));
   }
 
   private async ensureCollection(): Promise<void> {
@@ -118,5 +179,38 @@ export class QdrantVectorStoreService {
       16,
       20,
     )}-${hex.slice(20)}`;
+  }
+
+  private toQdrantFilter(filter?: VectorSearchFilter) {
+    const must: Array<{ key: string; match: { value: string } }> = [];
+
+    if (filter?.documentId) {
+      must.push({ key: 'documentId', match: { value: filter.documentId } });
+    }
+
+    return must.length > 0 ? { must } : undefined;
+  }
+
+  private toVectorSearchResult(point: QdrantSearchPoint): VectorSearchResult {
+    const payload = point.payload;
+
+    if (
+      !payload?.chunkId ||
+      !payload.documentId ||
+      typeof payload.chunkIndex !== 'number' ||
+      !payload.content ||
+      !payload.metadata
+    ) {
+      throw new BadGatewayException('qdrant search returned an invalid chunk payload');
+    }
+
+    return {
+      chunkId: payload.chunkId,
+      documentId: payload.documentId,
+      chunkIndex: payload.chunkIndex,
+      content: payload.content,
+      score: point.score,
+      metadata: payload.metadata,
+    };
   }
 }

@@ -1,0 +1,152 @@
+[
+  {
+    "query": "忘记密码后重置链接多久有效？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "账号与登录"
+  },
+  {
+    "query": "验证码输错几次账号会被锁？锁多久？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "账号与登录"
+  },
+  {
+    "query": "SAML 单点登录在哪里配置？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "账号与登录"
+  },
+  {
+    "query": "新成员邀请后默认是什么角色？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "账号与登录"
+  },
+  {
+    "query": "年度合同在哪里查看到期时间？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "订阅与计费"
+  },
+  {
+    "query": "套餐降级什么时候生效？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "订阅与计费"
+  },
+  {
+    "query": "已经开具的发票信息还能直接修改吗？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "订阅与计费"
+  },
+  {
+    "query": "企业版自定义工单状态有什么限制？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "工单与自动化"
+  },
+  {
+    "query": "自动分派规则可以按哪些条件匹配？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "工单与自动化"
+  },
+  {
+    "query": "合并重复工单后 SLA 统计会怎么处理？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "工单与自动化"
+  },
+  {
+    "query": "标准套餐工单数据保存多久？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "数据与安全"
+  },
+  {
+    "query": "审计日志可以按哪些条件筛选？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "数据与安全"
+  },
+  {
+    "query": "数据导出链接有效期是几天？",
+    "expectedSource": "product-faq.md",
+    "expectedTopic": "数据与安全"
+  },
+  {
+    "query": "Webhook 支持哪些事件类型？",
+    "expectedSource": "technical-guide.md",
+    "expectedTopic": "概述"
+  },
+  {
+    "query": "Webhook 目标 URL 多久内必须返回 2xx？",
+    "expectedSource": "technical-guide.md",
+    "expectedTopic": "快速开始"
+  },
+  {
+    "query": "Webhook 事件 payload 里有哪些基础字段？",
+    "expectedSource": "technical-guide.md",
+    "expectedTopic": "事件格式"
+  },
+  {
+    "query": "Webhook 签名算法是什么？",
+    "expectedSource": "technical-guide.md",
+    "expectedTopic": "鉴权与签名"
+  },
+  {
+    "query": "X-AcmeDesk-Timestamp 的重放保护窗口建议多长？",
+    "expectedSource": "technical-guide.md",
+    "expectedTopic": "重放保护"
+  },
+  {
+    "query": "Webhook 投递失败会重试几次？",
+    "expectedSource": "technical-guide.md",
+    "expectedTopic": "重试策略"
+  },
+  {
+    "query": "单个组织 Webhook 每分钟最多投递多少事件？",
+    "expectedSource": "technical-guide.md",
+    "expectedTopic": "速率限制"
+  },
+  {
+    "query": "Webhook payload 新增字段时接收方应该怎么处理？",
+    "expectedSource": "technical-guide.md",
+    "expectedTopic": "版本兼容"
+  },
+  {
+    "query": "ticket_api_p95_latency_ms 超过多少需要排查？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "触发条件"
+  },
+  {
+    "query": "TicketQueueBacklogHigh 的触发阈值是什么？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "触发条件"
+  },
+  {
+    "query": "工单列表加载很慢时，15 分钟内要判断哪些组件？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "背景"
+  },
+  {
+    "query": "健康检查失败时应该先看什么？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "快速诊断"
+  },
+  {
+    "query": "Mongo 慢查询要重点关注哪些集合？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "检查 MongoDB"
+  },
+  {
+    "query": "Redis 内存接近上限时应该怎么缓解？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "检查 Redis 和 BullMQ"
+  },
+  {
+    "query": "队列积压但 API 正常时应该先做什么？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "队列积压"
+  },
+  {
+    "query": "下游 LLM 返回 429 时 worker 并发应该怎么调？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "队列积压"
+  },
+  {
+    "query": "事故复盘需要记录哪些内容？",
+    "expectedSource": "operations-runbook.md",
+    "expectedTopic": "事后复盘"
+  }
+]

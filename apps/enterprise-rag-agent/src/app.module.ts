@@ -8,6 +8,7 @@ import { AppConfiguration, appConfig } from './config/app.config';
 import { ragConfig } from './config/rag.config';
 import { DocumentModule } from './document/document.module';
 import { IngestionModule } from './ingestion/ingestion.module';
+import { RetrievalModule } from './retrieval/retrieval.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { IngestionModule } from './ingestion/ingestion.module';
     }),
     DocumentModule,
     IngestionModule,
+    RetrievalModule,
   ],
   controllers: [AppController],
   providers: [AppService],
